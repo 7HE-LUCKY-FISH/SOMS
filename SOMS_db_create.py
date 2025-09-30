@@ -22,3 +22,8 @@ else:
 
 
 cursor = mydb.cursor()
+
+cursor.execute("CREATE DATABASE IF NOT EXISTS SOMS")
+cursor.execute("USE SOMS")
+
+#DDL to create tables
