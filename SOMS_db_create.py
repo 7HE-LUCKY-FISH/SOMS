@@ -2,13 +2,16 @@ import mysql.connector
 from mysql.connector import Error
 import os
 import time
+import dotenv
+dotenv.load_dotenv()    
+
 
 for _ in range(10):
     try:
         mydb = mysql.connector.connect(
             host=os.getenv('DB_HOST', 'localhost'),
             user=os.getenv('DB_USER', 'root'),   #we can change to port vs socket if needed
-            password=os.getenv('DB_PASSWORD', 'adminpass'),#change password here or grba from env
+            password=os.getenv('DB_PASSWORD', 'adminpass'),#change password here or grab from env  DO ENV!!!!!!!!!!!!
             auth_plugin='mysql_native_password'
         )
         break
