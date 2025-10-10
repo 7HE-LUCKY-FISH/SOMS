@@ -41,35 +41,42 @@ cursor.execute("""
         email varchar(100) not null unique,
         salary decimal(10,2) not null,
         age int not null,
-        date_hired date not null default(current_date)
+        date_hired date not null default(CURDATE()),
+        staff_type varchar(50) not null
     )""")
 
 cursor.execute("""
     create table if not exists coach
     (
-        staff_id int auto_increment primary key,
+        staff_id int  primary key,
         role varchar(50) not null,
         CONSTRAINT fk_coach
-    FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE
+        CONSTRAINT fk_coach_staff
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
     )
     """)
 cursor.execute("""
     create table if not exists scout
     (
-        staff_id int auto_increment primary key,
+        staff_id int primary key,
         region varchar(100),
         YOE int not null,
-    FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE
+      CONSTRAINT fk_scout_staff
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
     )
     """)
 cursor.execute("""
     create table if not exists med_staff
     (
-        staff_id auto_increment primary key,
-        specialization varchar(100) not null,
+        staff_id int primary key,
+        med_specialization varchar(100) not null,
         certification varchar)(100) not null,
         YOE int not null,
-        FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE
+        CONSTRAINT fk_med_staff_staff
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
     )
     """)
 
@@ -95,7 +102,7 @@ create table if not exists team
     team_id int auto_increment primary key,
     name varchar(100) not null,
     level varchar(50),
-    date_created date not null default(current_date)
+    date_created date not null default(CURDATE())
 )
 """)
 
@@ -103,7 +110,7 @@ cursor.execute("""
 create table if not exists medical_report 
 (
     med_report_id int auto_increment primary key,
-    player_id int unique,
+    player_id int not null,
     summary text,
     report_date date not null,
     treatment text,
@@ -116,7 +123,7 @@ create table if not exists medical_report
 
 # Conditions table
 cursor.execute("""
-create table if not exists condition 
+create table if not exists medical_condition 
 (
     condition_id int auto_increment primary key,
     med_report_id int,
