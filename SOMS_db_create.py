@@ -50,12 +50,18 @@ cursor.execute("""
     (
         staff_id int  primary key,
         role varchar(50) not null,
-        CONSTRAINT fk_coach
+        team_id int null, 
         CONSTRAINT fk_coach_staff
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT fk_coach_team
+        FOREIGN KEY (team_id) REFERENCES team(team_id)
+        ON DELETE SET NULL ON UPDATE CASCADE,
+        INDEX idx_coach_team (team_id)
     )
     """)
+
+
 cursor.execute("""
     create table if not exists scout
     (
@@ -92,9 +98,12 @@ create table if not exists player
     is_active BOOLEAN DEFAULT TRUE,
     is_injured BOOLEAN DEFAULT FALSE,
     transfer_value DECIMAL(10,2),
-    contract_end_date DATE NOT NULL
+    contract_end_date DATE NOT NULL,
+    scouted_player BOOLEAN DEFAULT FALSE
 )
 """)
+#scouted_player indicates if the player is being scouted and not on team
+
 
 cursor.execute("""
 create table if not exists team
@@ -102,7 +111,8 @@ create table if not exists team
     team_id int auto_increment primary key,
     name varchar(100) not null,
     level varchar(50),
-    date_created date not null default(CURDATE())
+    date_created date not null default(CURDATE()),
+    unique key uq_team_name (name)
 )
 """)
 
@@ -117,7 +127,8 @@ create table if not exists medical_report
     severity_of_injury varchar(50),
     CONSTRAINT fk_med_report_player FOREIGN KEY (player_id)
         REFERENCES player(player_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    INDEX idx_medrep_player (player_id)
 )
 """)
 
@@ -133,6 +144,7 @@ create table if not exists medical_condition
     CONSTRAINT fk_condition_med_report FOREIGN KEY (med_report_id)
         REFERENCES medical_report(med_report_id)
         ON DELETE CASCADE
+    INDEX idx_condition_med_report (med_report_id)
 )
 """)
 
@@ -156,11 +168,17 @@ create table if not exists scouting_report
     report_id int auto_increment primary key,
     scout_id int,
     target_player_name varchar(100),
+    target_player_id int,
     report_date date,
     report_desc text,
     CONSTRAINT fk_scouting_scout FOREIGN KEY (scout_id)
         REFERENCES scout(staff_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_scouting_target_player FOREIGN KEY (target_player_id)
+        REFERENCES player(player_id)
+        ON DELETE CASCADE,
+    INDEX idx_scouting_scout (scout_id),
+    INDEX idx_scouting_target_player (target_player_id
 )
 """)
 
@@ -189,7 +207,22 @@ create table if not exists player_match_stats
 )
 """)
 
+#quick convenience view for medical staff to see player medical summaries
+cursor.execute("""
+    create or replace view vw_player_medical_summary as
+    select p.player_id, 
+    concat_ws(' ', p.first_name, p.middle_name, p.last_name) as player_name,
+mr.med_report_id,
+  mr.report_date,
+  mr.severity_of_injury,
+  mc.condition_id,
+  mc.condition_name,
+  mc.diagnosis_date
+FROM player p
+JOIN medical_report mr ON mr.player_id = p.player_id
+LEFT JOIN medical_condition mc ON mc.med_report_id = mr.med_report_id;
+""")
 
-#  CONSTRAINT fk_coach
-#    FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE
-#idk what the hell we want here lol :cry:
+#someone test for stability and performance
+mydb.commit()
+cursor.close()
