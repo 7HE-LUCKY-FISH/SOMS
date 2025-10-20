@@ -96,3 +96,48 @@ class Scout:
         conn.commit()
         cursor.close()
         conn.close()
+
+
+class MedicalStaff:
+    def __init__(self, staff_id, specialization, qualification):
+        self.staff_id = staff_id
+        self.specialization = specialization
+        self.qualification = qualification
+
+    @staticmethod
+    def create(medical_staff):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO medical_staff (staff_id, specialization, qualification)
+        VALUES (%s, %s, %s)
+        """
+        cursor.execute(query, (medical_staff.staff_id, medical_staff.specialization, medical_staff.qualification))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+
+
+class MedicalReport:
+    def __init__(self, player_id, summary, report_date, treatment=None, severity_of_injury=None):
+        self.player_id = player_id
+        self.summary = summary
+        self.report_date = report_date
+        self.treatment = treatment
+        self.severity_of_injury = severity_of_injury
+
+    @staticmethod
+    def create(medical_report):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (medical_report.player_id, medical_report.summary, 
+                               medical_report.report_date, medical_report.treatment, 
+                               medical_report.severity_of_injury))
+        conn.commit()
+        cursor.close()
+        conn.close()
