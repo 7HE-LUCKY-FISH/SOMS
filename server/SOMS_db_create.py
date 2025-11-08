@@ -30,7 +30,16 @@ cursor.execute("CREATE DATABASE IF NOT EXISTS SOMS")
 cursor.execute("USE SOMS")
 
 #DDL to create tables
-
+cursor.execute("""
+create table if not exists team
+(
+    team_id int auto_increment primary key,
+    name varchar(100) not null,
+    level varchar(50),
+    date_created date not null default(CURDATE()),
+    unique key uq_team_name (name)
+)
+""")
 
 cursor.execute("""
     create table if not exists staff
@@ -78,7 +87,7 @@ cursor.execute("""
     (
         staff_id int primary key,
         med_specialization varchar(100) not null,
-        certification varchar)(100) not null,
+        certification varchar(100) not null,
         YOE int not null,
         CONSTRAINT fk_med_staff_staff
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
@@ -105,16 +114,6 @@ create table if not exists player
 #scouted_player indicates if the player is being scouted and not on team
 
 
-cursor.execute("""
-create table if not exists team
-(
-    team_id int auto_increment primary key,
-    name varchar(100) not null,
-    level varchar(50),
-    date_created date not null default(CURDATE()),
-    unique key uq_team_name (name)
-)
-""")
 
 cursor.execute("""
 create table if not exists medical_report 
@@ -143,7 +142,7 @@ create table if not exists medical_condition
     diagnosis_date date,
     CONSTRAINT fk_condition_med_report FOREIGN KEY (med_report_id)
         REFERENCES medical_report(med_report_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
     INDEX idx_condition_med_report (med_report_id)
 )
 """)
@@ -158,7 +157,7 @@ create table if not exists match_table
     opponent_team varchar   (100),
     match_date date,
     result varchar(50)
-)
+);
 """)
 
 
@@ -178,8 +177,8 @@ create table if not exists scouting_report
         REFERENCES player(player_id)
         ON DELETE CASCADE,
     INDEX idx_scouting_scout (scout_id),
-    INDEX idx_scouting_target_player (target_player_id
-)
+    INDEX idx_scouting_target_player (target_player_id)
+);
 """)
 
 cursor.execute("""
