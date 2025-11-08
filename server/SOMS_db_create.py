@@ -181,6 +181,25 @@ create table if not exists scouting_report
 );
 """)
 
+#this is staff account make sure this is working I am doing this on a text editor right 
+#with no highlighting
+
+
+cursor.execute("""
+create table if not exists staff_account(
+ staff_id int primary key, 
+ username varchar(64) not null unique, 
+ password_hash varchar(255) not null, 
+ is_active boolean default true, 
+ last_login datetime null, 
+   CONSTRAINT fk_staff_account_staff
+    FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+""")
+
+
+
 cursor.execute("""
 create table if not exists player_match_stats 
 (
