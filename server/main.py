@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from typing import Dict
 from db_connect_module import get_db_connection
 from models import Staff, Coach, Player, Scout, MedicalReport, MedicalStaff
-
+from werkzeug.security import check_password_hash
 
 #prob move this into this own thing if we are using pydantic to load the default
 # report
@@ -16,6 +16,13 @@ from typing import Optional, List, Dict
 from pydantic import BaseModel, EmailStr, Field
 #we need to add a class to create the users
 load_dotenv()
+
+
+#soeone move this later
+def verify_password(plain: str, hashed: str) -> bool:
+    if hashed is None:
+        return False
+    return check_password_hash(hashed, plain)
 
 app = FastAPI(title = 'SOMS_API')
 
@@ -46,6 +53,11 @@ class StaffCreate(BaseModel):
     salary: float = Field(..., ge=0)              
     age: int = Field(..., ge=14, le=120)   
     staff_type: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 
 
@@ -79,3 +91,36 @@ def create_staff_member(staff: StaffCreate):
     finally:
         cursor.close()
         connection.close()
+
+
+@app.post("/login")
+def login(credentials: LoginRequest):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        #probablly really unsafe lol
+        cursor.execute(
+            "SELECT staff_id, password_hash, is_active FROM staff_account WHERE username = %s",
+            (credentials.username,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        if not row.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Account is inactive")
+
+        stored_hash = row.get("password_hash")
+        if not verify_password(credentials.password, stored_hash):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        return {"status": "success", "staff_id": row.get("staff_id")}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+
