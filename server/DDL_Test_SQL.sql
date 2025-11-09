@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS player (
   photo_content_type VARCHAR(100),
   photo_filename VARCHAR(255),
   photo_size BIGINT,
-  photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_player_identity (first_name, last_name, contract_end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
