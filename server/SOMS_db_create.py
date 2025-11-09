@@ -96,6 +96,7 @@ cursor.execute("""
     );
     """)
 
+# Player table now includes LONGBLOB columns for a single profile photo and metadata
 cursor.execute("""
 create table if not exists player 
 (
@@ -109,7 +110,13 @@ create table if not exists player
     is_injured BOOLEAN DEFAULT FALSE,
     transfer_value DECIMAL(10,2),
     contract_end_date DATE NOT NULL,
-    scouted_player BOOLEAN DEFAULT FALSE
+    scouted_player BOOLEAN DEFAULT FALSE,
+    -- profile photo stored in the DB (LONGBLOB): binary, content type, filename, size and timestamp
+    photo LONGBLOB,
+    photo_content_type VARCHAR(100),
+    photo_filename VARCHAR(255),
+    photo_size BIGINT,
+    photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 """)
 #scouted_player indicates if the player is being scouted and not on team
@@ -231,7 +238,7 @@ cursor.execute("""
     create or replace view vw_player_medical_summary as
     select p.player_id, 
     concat_ws(' ', p.first_name, p.middle_name, p.last_name) as player_name,
-mr.med_report_id,
+  mr.med_report_id,
   mr.report_date,
   mr.severity_of_injury,
   mc.condition_id,
