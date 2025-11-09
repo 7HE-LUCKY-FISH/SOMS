@@ -58,6 +58,11 @@ CREATE TABLE IF NOT EXISTS player (
   transfer_value DECIMAL(10,2),
   contract_end_date DATE NOT NULL,
   scouted_player TINYINT(1) DEFAULT 0,
+  photo LONGBLOB,
+  photo_content_type VARCHAR(100),
+  photo_filename VARCHAR(255),
+  photo_size BIGINT,
+  photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_player_identity (first_name, last_name, contract_end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
