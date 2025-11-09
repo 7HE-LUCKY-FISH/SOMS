@@ -38,7 +38,7 @@ create table if not exists team
     level varchar(50),
     date_created date not null default(CURDATE()),
     unique key uq_team_name (name)
-)
+);
 """)
 
 cursor.execute("""
@@ -52,7 +52,8 @@ cursor.execute("""
         age int not null,
         date_hired date not null default(CURDATE()),
         staff_type varchar(50) not null
-    )""")
+    );
+""")
 
 cursor.execute("""
     create table if not exists coach
@@ -67,7 +68,7 @@ cursor.execute("""
         FOREIGN KEY (team_id) REFERENCES team(team_id)
         ON DELETE SET NULL ON UPDATE CASCADE,
         INDEX idx_coach_team (team_id)
-    )
+    );
     """)
 
 
@@ -80,7 +81,7 @@ cursor.execute("""
       CONSTRAINT fk_scout_staff
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
         ON DELETE CASCADE ON UPDATE CASCADE
-    )
+    );
     """)
 cursor.execute("""
     create table if not exists med_staff
@@ -92,7 +93,7 @@ cursor.execute("""
         CONSTRAINT fk_med_staff_staff
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
         ON DELETE CASCADE ON UPDATE CASCADE
-    )
+    );
     """)
 
 cursor.execute("""
@@ -109,7 +110,7 @@ create table if not exists player
     transfer_value DECIMAL(10,2),
     contract_end_date DATE NOT NULL,
     scouted_player BOOLEAN DEFAULT FALSE
-)
+);
 """)
 #scouted_player indicates if the player is being scouted and not on team
 
@@ -128,7 +129,7 @@ create table if not exists medical_report
         REFERENCES player(player_id)
         ON DELETE CASCADE,
     INDEX idx_medrep_player (player_id)
-)
+);
 """)
 
 # Conditions table
@@ -144,7 +145,7 @@ create table if not exists medical_condition
         REFERENCES medical_report(med_report_id)
         ON DELETE CASCADE,
     INDEX idx_condition_med_report (med_report_id)
-)
+);
 """)
 
 cursor.execute("""
@@ -191,7 +192,7 @@ create table if not exists staff_account(
  username varchar(64) not null unique, 
  password_hash varchar(255) not null, 
  is_active boolean default true, 
- last_login datetime null, 
+ last_login datetime null,
    CONSTRAINT fk_staff_account_staff
     FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
     ON DELETE CASCADE ON UPDATE CASCADE
@@ -222,7 +223,7 @@ create table if not exists player_match_stats
     CONSTRAINT fk_pms_player FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE CASCADE,
     CONSTRAINT fk_pms_match FOREIGN KEY (match_id) REFERENCES match_table(match_id) ON DELETE CASCADE,
     CONSTRAINT fk_pms_team FOREIGN KEY (team_id) REFERENCES team(team_id) ON DELETE CASCADE
-)
+);
 """)
 
 #quick convenience view for medical staff to see player medical summaries
