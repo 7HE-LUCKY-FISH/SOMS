@@ -1,6 +1,6 @@
 import os
 import mysql.connector
-
+from datetime import date, datetime, time as dtime
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -18,11 +18,22 @@ from pydantic import BaseModel, EmailStr, Field
 load_dotenv()
 
 
-#soeone move this later
+# someone move this later
 def verify_password(plain: str, hashed: str) -> bool:
     if hashed is None:
         return False
     return check_password_hash(hashed, plain)
+
+
+
+def _serialize_row_dates(row: dict) -> dict:
+    # Convert date/time/datetime objects into strings for JSON serialization
+    for k, v in list(row.items()):
+        if isinstance(v, (date, datetime, dtime)):
+            row[k] = str(v)
+    return row
+
+
 
 app = FastAPI(title = 'SOMS_API')
 
@@ -121,6 +132,122 @@ def login(credentials: LoginRequest):
         cursor.close()
         connection.close()
 
+#get staff
+@app.get("/staff", response_model=Dict)
+def get_all_staff():
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT staff_id, first_name, middle_name, last_name, email, salary, age, date_hired, staff_type FROM staff")
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        # serialize any date fields
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
+
+#get scouts
+@app.get("/scouts", response_model=Dict)
+def get_all_scouts():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT s.staff_id, st.first_name, st.middle_name, st.last_name, st.email, s.region, s.YOE
+            FROM scout s
+            JOIN staff st ON s.staff_id = st.staff_id
+            ORDER BY st.last_name, st.first_name
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
 
 
+#player data
+@app.get("/players", response_model=Dict)
+def get_all_players():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT player_id, first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player
+            FROM player
+            ORDER BY last_name, first_name
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
+
+#this might be buggy due to the DATE time to normal date conversion
+
+@app.get("/fixtures", reponse_model=Dict)
+def get_fixtures():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT match_id, name, venue, match_time, opponent_team, match_date, result
+            FROM match_table
+            ORDER BY match_date ASC, match_time ASC
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        # serialize date/time fields
+        serialized = []
+        for r in rows:
+            serialized.append(_serialize_row_dates(r))
+        return {"status": "success", "count": len(serialized), "data": serialized}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+@app.get("/fixtures/upcoming", response_model=Dict)
+def get_upcoming_fixtures():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT match_id, name, venue, match_time, opponent_team, match_date, result
+            FROM match_table
+            WHERE match_date >= CURDATE()
+            ORDER BY match_date ASC, match_time ASC
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        # serialize date/time fields
+        serialized = []
+        for r in rows:
+            serialized.append(_serialize_row_dates(r))
+        return {"status": "success", "count": len(serialized), "data": serialized}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        connection.close()
 
