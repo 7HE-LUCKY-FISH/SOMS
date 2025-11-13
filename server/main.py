@@ -2,7 +2,7 @@ import os
 import mysql.connector
 from datetime import date, datetime, time as dtime
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict
@@ -227,6 +227,61 @@ class PlayerCreate(BaseModel):
 def create_player(player: PlayerCreate):
     try:
         player_id = Player.create(player)
+        return {"status": "success", "player_id": player_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+@app.post("/player/create-with-photo", status_code=201)
+async def create_player_with_photo(
+    first_name: str = Form(...),
+    middle_name: Optional[str] = Form(None),
+    last_name: str = Form(...),
+    salary: float = Form(...),
+    positions: Optional[str] = Form(None),
+    is_active: Optional[bool] = Form(True),
+    is_injured: Optional[bool] = Form(False),
+    transfer_value: Optional[float] = Form(None),
+    contract_end_date: Optional[str] = Form(None),
+    scouted_player: Optional[bool] = Form(False),
+    file: UploadFile = File(None),
+):
+    # build Player instance
+    contract_date = None
+    if contract_end_date:
+        try:
+            contract_date = date.fromisoformat(contract_end_date)
+        except Exception:
+            raise HTTPException(status_code=400, detail="contract_end_date must be YYYY-MM-DD")
+
+    player_obj = Player(
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        salary=salary,
+        positions=positions,
+        is_active=is_active,
+        is_injured=is_injured,
+        transfer_value=transfer_value,
+        contract_end_date=contract_date,
+        scouted_player=scouted_player,
+    )
+
+    photo_bytes = None
+    content_type = None
+    filename = None
+    size = None
+    if file is not None:
+        try:
+            photo_bytes = await file.read()
+            content_type = file.content_type
+            filename = file.filename
+            size = len(photo_bytes)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error reading uploaded file: {e}")
+
+    try:
+        player_id = Player.create_with_photo(player_obj, photo_bytes, content_type, filename, size)
         return {"status": "success", "player_id": player_id}
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))

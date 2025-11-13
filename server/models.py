@@ -109,6 +109,38 @@ class Player:
         conn.close()
         return last_id
 
+    @staticmethod
+    def create_with_photo(player, photo_bytes: bytes, photo_content_type: str, photo_filename: str, photo_size: int):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
+                           is_active, is_injured, transfer_value, contract_end_date, scouted_player,
+                           photo, photo_content_type, photo_filename, photo_size)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            player.first_name,
+            player.middle_name,
+            player.last_name,
+            player.salary,
+            player.positions,
+            player.is_active,
+            player.is_injured,
+            player.transfer_value,
+            player.contract_end_date,
+            player.scouted_player,
+            photo_bytes,
+            photo_content_type,
+            photo_filename,
+            photo_size,
+        ))
+        last_id = cursor.lastrowid
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return last_id
+
 class Scout:
     def __init__(self, staff_id, region, YOE):
         self.staff_id = staff_id
