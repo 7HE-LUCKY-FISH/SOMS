@@ -1,12 +1,22 @@
 import os
 import mysql.connector
 from datetime import date, datetime, time as dtime
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict
 from db_connect_module import get_db_connection
-from models import Staff, Coach, Player, Scout, MedicalReport, MedicalStaff
+from models import (
+    Staff,
+    Coach,
+    Player,
+    Scout,
+    MedicalReport,
+    MedicalStaff,
+    StaffCreate,
+    LoginRequest,
+)
 from werkzeug.security import check_password_hash
 
 #prob move this into this own thing if we are using pydantic to load the default
@@ -54,54 +64,13 @@ def health_check() -> Dict[str, str]:
     return {"status": "ok"}
 
 
-
-#prob move this into its own file
-class StaffCreate(BaseModel): 
-    first_name: str
-    middle_name: Optional[str] = None
-    last_name: str
-    email: EmailStr
-    salary: float = Field(..., ge=0)              
-    age: int = Field(..., ge=14, le=120)   
-    staff_type: str
-
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-
-@app.post("/staff", status_code=201)
+@app.post("/staff/create", status_code=201)
 def create_staff_member(staff: StaffCreate):
-    connection = get_db_connection()
-    cursor = connection.cursor()
     try:
-        cursor.execute(
-            """
-            INSERT INTO staff 
-              (first_name, middle_name, last_name, email, salary, age, staff_type) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                staff.first_name,
-                staff.middle_name,
-                staff.last_name,
-                staff.email,
-                staff.salary,
-                staff.age,
-                staff.staff_type,
-            ),
-        )
-        connection.commit()
-        return {"status": "success", "staff_id": cursor.lastrowid}
+        staff_id = Staff.create(staff)
+        return {"status": "success", "staff_id": staff_id}
     except mysql.connector.Error as err:
-        connection.rollback()
-        # optional: raise HTTPException(400, str(err)) if you prefer non-200 on error
-        return {"status": "error", "message": str(err)}
-    finally:
-        cursor.close()
-        connection.close()
+        raise HTTPException(status_code=500, detail=str(err))
 
 
 @app.post("/login")
@@ -200,7 +169,7 @@ def get_all_players():
 
 #this might be buggy due to the DATE time to normal date conversion
 
-@app.get("/fixtures", reponse_model=Dict)
+@app.get("/fixtures", response_model=Dict)
 def get_fixtures():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -223,6 +192,92 @@ def get_fixtures():
     finally:
         cursor.close()
         connection.close()
+
+
+# --- Create endpoints for models ---
+class CoachCreate(BaseModel):
+    staff_id: int
+    role: str
+    team_id: Optional[int] = None
+
+
+@app.post("/coach/create", status_code=201)
+def create_coach(coach: CoachCreate):
+    try:
+        staff_id = Coach.create(coach)
+        return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+class PlayerCreate(BaseModel):
+    first_name: str
+    middle_name: Optional[str] = None
+    last_name: str
+    salary: float
+    positions: Optional[str] = None
+    is_active: Optional[bool] = True
+    is_injured: Optional[bool] = False
+    transfer_value: Optional[float] = None
+    contract_end_date: Optional[date] = None
+    scouted_player: Optional[bool] = False
+
+
+@app.post("/player/create", status_code=201)
+def create_player(player: PlayerCreate):
+    try:
+        player_id = Player.create(player)
+        return {"status": "success", "player_id": player_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+class ScoutCreate(BaseModel):
+    staff_id: int
+    region: Optional[str] = None
+    YOE: int
+
+
+@app.post("/scout/create", status_code=201)
+def create_scout(scout: ScoutCreate):
+    try:
+        staff_id = Scout.create(scout)
+        return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+class MedicalStaffCreate(BaseModel):
+    staff_id: int
+    med_specialization: str
+    certification: str
+    YOE: int
+
+
+@app.post("/medical_staff/create", status_code=201)
+def create_medical_staff(ms: MedicalStaffCreate):
+    try:
+        staff_id = MedicalStaff.create(ms)
+        return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+class MedicalReportCreate(BaseModel):
+    player_id: int
+    summary: Optional[str] = None
+    report_date: date
+    treatment: Optional[str] = None
+    severity_of_injury: Optional[str] = None
+
+
+@app.post("/medical_report/create", status_code=201)
+def create_medical_report(mr: MedicalReportCreate):
+    try:
+        med_report_id = MedicalReport.create(mr)
+        return {"status": "success", "med_report_id": med_report_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
 
 
 
@@ -250,4 +305,7 @@ def get_upcoming_fixtures():
     finally:
         cursor.close()
         connection.close()
+
+
+
 
