@@ -1,7 +1,7 @@
 import os
 import mysql.connector
 from datetime import date, datetime, time as dtime
-
+import uvicorn
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -363,4 +363,6 @@ def get_upcoming_fixtures():
 
 
 
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
