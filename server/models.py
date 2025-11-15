@@ -1,5 +1,5 @@
 from db_connect_module import get_db_connection
-from typing import Optional
+from typing import Optional, Dict
 from pydantic import BaseModel, EmailStr, Field
 from datetime import date
 
@@ -59,6 +59,19 @@ class ScoutCreate(BaseModel):
     staff_id: int
     region: Optional[str] = None
     YOE: int
+
+class FormationCreate(BaseModel):
+    code: str
+    name: Optional[str] = None
+    roles: Optional[Dict[int, str]] = None  # {slot_no: custom_label}
+
+class LineupCreate(BaseModel):
+    match_id: int
+    team_id: int
+    formation_id: int
+    is_starting: bool = True
+    minute_applied: int = 0
+    players: Dict[int, int]  # {slot_no: player_id}; expect keys 1..11
 
 
 
@@ -296,3 +309,55 @@ class MedicalReport:
             if conn:
                 conn.close()
         return last_id
+
+
+class Formation:
+    @staticmethod
+    def create(f: FormationCreate) -> int:
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO formation (code, name) VALUES (%s, %s)", (f.code, f.name))
+            formation_id = cursor.lastrowid
+            if f.roles:
+                for slot_no, label in f.roles.items():
+                    cursor.execute(
+                        "INSERT INTO formation_role (formation_id, slot_no, label) VALUES (%s, %s, %s)",
+                        (formation_id, slot_no, label)
+                    )
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating formation: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+        return formation_id
+
+class Lineup:
+    @staticmethod
+    def create_with_slots(lc: LineupCreate) -> int:
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
+                           VALUES (%s,%s,%s,%s,%s)""",
+                           (lc.match_id, lc.team_id, lc.formation_id, lc.is_starting, lc.minute_applied))
+            lineup_id = cursor.lastrowid
+            for slot_no, player_id in lc.players.items():
+                cursor.execute("""INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)
+                               VALUES (%s, %s, %s)""", (lineup_id, slot_no, player_id))
+            conn.commit()
+            return lineup_id
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()

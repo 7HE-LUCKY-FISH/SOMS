@@ -249,6 +249,104 @@ JOIN medical_report mr ON mr.player_id = p.player_id
 LEFT JOIN medical_condition mc ON mc.med_report_id = mr.med_report_id;
 """)
 
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS role_number (
+    slot_no TINYINT UNSIGNED PRIMARY KEY,
+    default_label VARCHAR(50) NOT NULL
+    );
+    """)
+cursor.execute("""
+    INSERT IGNORE INTO role_number (slot_no, default_label) VALUES
+    (1, 'Goalkeeper'),
+    (2, 'Right Fullback'),
+    (3, 'Left Fullback'),
+    (4, 'Center Back'),
+    (5, 'Center Back (or Sweeper)'),
+    (6, 'Defending/Holding Midfielder'),
+    (7, 'Right Midfielder/Winger'),
+    (8, 'Central/Box-to-Box Midfielder'),
+    (9, 'Striker'),
+    (10,'Attacking Midfielder/Playmaker'),
+    (11,'Left Midfielder/Winger');
+    """)
+
+cursor.execute("""
+   CREATE TABLE IF NOT EXISTS formation (
+  formation_id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(20) NOT NULL UNIQUE,  -- e.g. '4-4-2'
+  name VARCHAR(100)
+    );
+            
+""")
+
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS formation_role (
+    formation_id INT NOT NULL,
+    slot_no TINYINT UNSIGNED NOT NULL,
+    label VARCHAR(50) NOT NULL,
+    PRIMARY KEY (formation_id, slot_no),
+    CONSTRAINT fk_fr_form FOREIGN KEY (formation_id) REFERENCES formation(formation_id) ON DELETE CASCADE,
+    CONSTRAINT fk_fr_slot FOREIGN KEY (slot_no) REFERENCES role_number(slot_no) ON DELETE RESTRICT
+);
+""")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS match_lineup (
+    lineup_id INT AUTO_INCREMENT PRIMARY KEY,
+    match_id INT NOT NULL,
+    team_id INT NOT NULL,
+    formation_id INT NOT NULL,
+    is_starting BOOLEAN DEFAULT TRUE,
+    minute_applied SMALLINT UNSIGNED DEFAULT 0,  -- 0 = kickoff
+    CONSTRAINT fk_ml_match FOREIGN KEY (match_id) REFERENCES match_table(match_id) ON DELETE CASCADE,
+    CONSTRAINT fk_ml_team  FOREIGN KEY (team_id)  REFERENCES team(team_id)         ON DELETE CASCADE,
+    CONSTRAINT fk_ml_form  FOREIGN KEY (formation_id) REFERENCES formation(formation_id) ON DELETE RESTRICT,
+    INDEX idx_ml_match_team (match_id, team_id)
+);                  
+""")
+
+
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS match_lineup_slot (
+    lineup_slot_id INT AUTO_INCREMENT PRIMARY KEY,
+    lineup_id INT NOT NULL,
+    slot_no TINYINT UNSIGNED NOT NULL,
+    player_id INT NOT NULL,
+    jersey_number INT,
+    captain BOOLEAN DEFAULT FALSE,
+    UNIQUE KEY uq_lineup_slot (lineup_id, slot_no),
+    UNIQUE KEY uq_lineup_player (lineup_id, player_id),
+    CONSTRAINT fk_mls_lineup FOREIGN KEY (lineup_id) REFERENCES match_lineup(lineup_id) ON DELETE CASCADE,
+    CONSTRAINT fk_mls_slot   FOREIGN KEY (slot_no)   REFERENCES role_number(slot_no) ON DELETE RESTRICT,
+    CONSTRAINT fk_mls_player FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE RESTRICT
+);               
+""")
+
+
+cursor.execute("""
+    create or replace view v_lineup_roles as
+    select
+    ml.lineup_id, ml.match_id, ml.team_id, ml.is_starting, ml.minute_applied,
+    f.formation_id, f.code as formation_code,
+    mls.slot_no,
+    coalesce(fr.label, rn.default_label) as role_label,
+    p.player_id,
+    concat_ws(' ', p.first_name, p.last_name) as player_name
+    from match_lineup ml
+    join formation f            on f.formation_id = ml.formation_id
+    join match_lineup_slot mls  on mls.lineup_id   = ml.lineup_id
+    left join formation_role fr on fr.formation_id = ml.formation_id
+                            and fr.slot_no      = mls.slot_no
+    join role_number rn         on rn.slot_no      = mls.slot_no
+    join player p               on p.player_id     = mls.player_id;
+               
+""")
+
+
+
 #someone test for stability and performance
 mydb.commit()
 cursor.close()

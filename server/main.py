@@ -13,13 +13,17 @@ from models import (
     Scout,
     MedicalReport,
     MedicalStaff,
+    Formation,
+    Lineup,
     StaffCreate,
     LoginRequest,
     CoachCreate,
     PlayerCreate,
     MedicalReportCreate,
     ScoutCreate,
-    MedicalStaffCreate
+    MedicalStaffCreate,
+    FormationCreate,
+    LineupCreate
 )
 from werkzeug.security import check_password_hash
 
@@ -334,6 +338,143 @@ def get_upcoming_fixtures():
             cursor.close()
         if connection:
             connection.close()
+
+@app.post("/formation/create", status_code=201)
+def create_formation(payload: FormationCreate):
+    try:
+        formation_id = Formation.create(payload)
+        return {"status": "success", "formation_id": formation_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+@app.post("/lineup/create", status_code=201)
+def create_lineup(payload: LineupCreate):
+    try:
+        lineup_id = Lineup.create_with_slots(payload)
+        return {"status": "success", "lineup_id": lineup_id}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+@app.get("/formations", response_model=Dict)
+def get_all_formations():
+    """Get all available formations"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT formation_id, code, name
+            FROM formation
+            ORDER BY code
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/lineups", response_model=Dict)
+def get_all_lineups():
+    """Get all saved lineups"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT 
+                ml.lineup_id, 
+                ml.match_id, 
+                ml.team_id, 
+                ml.formation_id,
+                ml.is_starting,
+                ml.minute_applied,
+                f.code as formation_code,
+                f.name as formation_name,
+                m.name as match_name,
+                m.match_date,
+                t.team_name
+            FROM match_lineup ml
+            JOIN formation f ON f.formation_id = ml.formation_id
+            LEFT JOIN match_table m ON m.match_id = ml.match_id
+            LEFT JOIN team t ON t.team_id = ml.team_id
+            ORDER BY ml.lineup_id DESC
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/lineups/{lineup_id}", response_model=Dict)
+def get_lineup_details(lineup_id: int):
+    """Get detailed lineup with all players and positions"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        # Get lineup header
+        cursor.execute("""
+            SELECT 
+                ml.lineup_id, 
+                ml.match_id, 
+                ml.team_id, 
+                ml.formation_id,
+                ml.is_starting,
+                ml.minute_applied,
+                f.code as formation_code,
+                f.name as formation_name
+            FROM match_lineup ml
+            JOIN formation f ON f.formation_id = ml.formation_id
+            WHERE ml.lineup_id = %s
+        """, (lineup_id,))
+        lineup = cursor.fetchone()
+        
+        if not lineup:
+            raise HTTPException(status_code=404, detail="Lineup not found")
+        
+        # Get all slots with players
+        cursor.execute("""
+            SELECT 
+                mls.slot_no,
+                mls.player_id,
+                mls.jersey_number,
+                mls.captain,
+                p.first_name,
+                p.middle_name,
+                p.last_name,
+                p.positions
+            FROM match_lineup_slot mls
+            JOIN player p ON p.player_id = mls.player_id
+            WHERE mls.lineup_id = %s
+            ORDER BY mls.slot_no
+        """, (lineup_id,))
+        slots = cursor.fetchall()
+        
+        lineup = _serialize_row_dates(lineup)
+        lineup['slots'] = slots if slots else []
+        
+        return {"status": "success", "data": lineup}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 
 
