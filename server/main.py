@@ -23,9 +23,10 @@ from models import (
     ScoutCreate,
     MedicalStaffCreate,
     FormationCreate,
-    LineupCreate
+    LineupCreate,
+    StaffAccountCreate
 )
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 
@@ -101,6 +102,50 @@ def login(credentials: LoginRequest):
             cursor.close()
         if connection:
             connection.close()
+
+# this is set up weird since we need to have the staff memember already in the system for them to create a account
+# so we can prob have it where still the DBA needs to create the staff 
+# memeber but the staff memeber itself can create its own account
+
+
+@app.post("/create_account", status_code=201)
+def create_account(payload: StaffAccountCreate):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        # Ensure staff exists
+        cursor.execute("SELECT staff_id FROM staff WHERE staff_id = %s", (payload.staff_id,))
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=404, detail="Staff member not found")
+
+        # Check username isn't already taken
+        cursor.execute("SELECT username FROM staff_account WHERE username = %s", (payload.username,))
+        if cursor.fetchone() is not None:
+            raise HTTPException(status_code=409, detail="Username already exists")
+
+        # Check account doesn't already exist for this staff member
+        cursor.execute("SELECT staff_id FROM staff_account WHERE staff_id = %s", (payload.staff_id,))
+        if cursor.fetchone() is not None:
+            raise HTTPException(status_code=409, detail="Account already exists for this staff.")
+
+        # Hash the password and store the account
+        password_hash = generate_password_hash(payload.password)
+        cursor.execute(
+            "INSERT INTO staff_account (staff_id, username, password_hash, is_active) VALUES (%s, %s, %s, %s)",
+            (payload.staff_id, payload.username, password_hash, payload.is_active)
+        )
+        connection.commit()
+        return {"status": "success", "staff_id": payload.staff_id}
+    except mysql.connector.IntegrityError as err:
+        raise HTTPException(status_code=409, detail=str(err))
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 #get staff
 @app.get("/staff", response_model=Dict)
@@ -202,6 +247,32 @@ def get_fixtures():
             connection.close()
 
 
+@app.get("/coaches", response_model=Dict)
+def get_all_coaches():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT c.staff_id, st.first_name, st.middle_name, st.last_name, st.email, c.role, c.team_id
+            FROM coach c
+            JOIN staff st ON c.staff_id = st.staff_id
+            ORDER BY st.last_name, st.first_name
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+
 @app.post("/coach/create", status_code=201)
 def create_coach(coach: CoachCreate):
     try:
@@ -291,7 +362,29 @@ def create_scout(scout: ScoutCreate):
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))
 
-
+@app.get("/medical_staff", status_code=200)
+def get_all_medical_staff():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT ms.staff_id, st.first_name, st.middle_name, st.last_name, st.email, ms.med_specialization, ms.certification, ms.YOE
+            FROM medical_staff ms
+            JOIN staff st ON ms.staff_id = st.staff_id
+            ORDER BY st.last_name, st.first_name
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        rows = [_serialize_row_dates(r) for r in rows]
+        return {"status": "success", "count": len(rows), "data": rows}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @app.post("/medical_staff/create", status_code=201)
 def create_medical_staff(ms: MedicalStaffCreate):
@@ -309,6 +402,84 @@ def create_medical_report(mr: MedicalReportCreate):
         return {"status": "success", "med_report_id": med_report_id}
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))
+
+
+
+@app.get("/medical_reports/{player_id}", response_model=Dict)
+def get_all_medical_reports(player_id: int):
+    """Return all medical reports for a player, with linked medical conditions nested per report"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT
+                mr.med_report_id,
+                mr.player_id,
+                p.first_name,
+                p.middle_name,
+                p.last_name,
+                mr.summary,
+                mr.report_date,
+                mr.treatment,
+                mr.severity_of_injury,
+                mc.condition_id,
+                mc.condition_name,
+                mc.description AS condition_description,
+                mc.diagnosis_date
+            FROM medical_report mr
+            JOIN player p ON mr.player_id = p.player_id
+            LEFT JOIN medical_condition mc ON mc.med_report_id = mr.med_report_id
+            WHERE mr.player_id = %s
+            ORDER BY mr.report_date DESC, mc.diagnosis_date DESC
+        """, (player_id,))
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+
+        # Group rows by med_report_id and accumulate conditions into a list for each report
+        reports_by_id = {}
+        for r in rows:
+            report_id = r.get('med_report_id')
+            if report_id not in reports_by_id:
+                report = {
+                    'med_report_id': report_id,
+                    'player_id': r.get('player_id'),
+                    'player_first_name': r.get('first_name'),
+                    'player_middle_name': r.get('middle_name'),
+                    'player_last_name': r.get('last_name'),
+                    'summary': r.get('summary'),
+                    'report_date': r.get('report_date'),
+                    'treatment': r.get('treatment'),
+                    'severity_of_injury': r.get('severity_of_injury'),
+                    'conditions': []
+                }
+                reports_by_id[report_id] = report
+
+            # If there is a condition row (may be NULL if no conditions linked), append it
+            if r.get('condition_id') is not None:
+                cond = {
+                    'condition_id': r.get('condition_id'),
+                    'condition_name': r.get('condition_name'),
+                    'description': r.get('condition_description'),
+                    'diagnosis_date': r.get('diagnosis_date')
+                }
+                reports_by_id[report_id]['conditions'].append(_serialize_row_dates(cond))
+
+        # Prepare final list with serialized report dates
+        result = []
+        for rep in reports_by_id.values():
+            rep_serialized = _serialize_row_dates(rep)
+            result.append(rep_serialized)
+
+        return {"status": "success", "count": len(result), "data": result}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 
 
@@ -475,6 +646,166 @@ def get_lineup_details(lineup_id: int):
         if connection:
             connection.close()
 
+
+
+@app.get("/medical_reports", response_model=Dict)
+def get_all_medical_reports_all_players():
+    """Return all medical reports across all players, with linked medical conditions nested per report"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT
+                mr.med_report_id,
+                mr.player_id,
+                p.first_name,
+                p.middle_name,
+                p.last_name,
+                mr.summary,
+                mr.report_date,
+                mr.treatment,
+                mr.severity_of_injury,
+                mc.condition_id,
+                mc.condition_name,
+                mc.description AS condition_description,
+                mc.diagnosis_date
+            FROM medical_report mr
+            JOIN player p ON mr.player_id = p.player_id
+            LEFT JOIN medical_condition mc ON mc.med_report_id = mr.med_report_id
+            ORDER BY mr.report_date DESC, mc.diagnosis_date DESC
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+
+        # Group rows by med_report_id and accumulate conditions into a list for each report
+        reports_by_id = {}
+        for r in rows:
+            report_id = r.get('med_report_id')
+            if report_id not in reports_by_id:
+                report = {
+                    'med_report_id': report_id,
+                    'player_id': r.get('player_id'),
+                    'player_first_name': r.get('first_name'),
+                    'player_middle_name': r.get('middle_name'),
+                    'player_last_name': r.get('last_name'),
+                    'summary': r.get('summary'),
+                    'report_date': r.get('report_date'),
+                    'treatment': r.get('treatment'),
+                    'severity_of_injury': r.get('severity_of_injury'),
+                    'conditions': []
+                }
+                reports_by_id[report_id] = report
+
+            # If there is a condition row (may be NULL if no conditions linked), append it
+            if r.get('condition_id') is not None:
+                cond = {
+                    'condition_id': r.get('condition_id'),
+                    'condition_name': r.get('condition_name'),
+                    'description': r.get('condition_description'),
+                    'diagnosis_date': r.get('diagnosis_date')
+                }
+                reports_by_id[report_id]['conditions'].append(_serialize_row_dates(cond))
+
+        # Prepare final list with serialized report dates
+        result = []
+        for rep in reports_by_id.values():
+            rep_serialized = _serialize_row_dates(rep)
+            result.append(rep_serialized)
+
+        return {"status": "success", "count": len(result), "data": result}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+@app.get("/player_details/{player_id}", response_model=Dict)
+def get_player_details(player_id: int):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT 
+                player_id,
+                first_name,
+                middle_name,
+                last_name,
+                salary,
+                positions,
+                is_active,
+                is_injured,
+                transfer_value,
+                contract_end_date,
+                scouted_player
+            FROM player
+            WHERE player_id = %s
+        """, (player_id,))
+        player = cursor.fetchone()
+        
+        if not player:
+            raise HTTPException(status_code=404, detail="Player not found")
+        
+        player = _serialize_row_dates(player)
+        
+        # Get medical reports for the player
+        cursor.execute("""
+            SELECT
+                mr.med_report_id,
+                mr.summary,
+                mr.report_date,
+                mr.treatment,
+                mr.severity_of_injury
+            FROM medical_report mr
+            WHERE mr.player_id = %s
+            ORDER BY mr.report_date DESC
+        """, (player_id,))
+        reports = cursor.fetchall()
+        
+        player['medical_reports'] = [_serialize_row_dates(r) for r in reports] if reports else []
+        
+        # Get match stats for the player across matches
+        cursor.execute("""
+            SELECT
+                pms.pms_id,
+                pms.player_id,
+                pms.match_id,
+                m.name AS match_name,
+                m.match_date,
+                m.match_time,
+                pms.team_id,
+                t.name AS team_name,
+                pms.started,
+                pms.tackles,
+                pms.minutes,
+                pms.shots_total,
+                pms.offsides,
+                pms.red_cards,
+                pms.yellow_cards,
+                pms.fouls_committed,
+                pms.dribbles_attempted,
+                pms.assists,
+                pms.goals,
+                pms.passing_accuracy
+            FROM player_match_stats pms
+            LEFT JOIN match_table m ON pms.match_id = m.match_id
+            LEFT JOIN team t ON pms.team_id = t.team_id
+            WHERE pms.player_id = %s
+            ORDER BY m.match_date DESC, m.match_time DESC
+        """, (player_id,))
+        pms_rows = cursor.fetchall()
+        player['match_stats'] = [_serialize_row_dates(r) for r in pms_rows] if pms_rows else []
+        
+        return {"status": "success", "data": player}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 

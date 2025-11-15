@@ -27,6 +27,13 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class StaffAccountCreate(BaseModel):
+    staff_id: int
+    username: str
+    password: str
+    is_active: Optional[bool] = True
+
+
 class CoachCreate(BaseModel):
     staff_id: int
     role: str
