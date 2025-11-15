@@ -1,7 +1,7 @@
 from db_connect_module import get_db_connection
-from typing import Optional, List, Dict
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-
+from datetime import date
 
 
 class StaffCreate(BaseModel): 
@@ -14,18 +14,51 @@ class StaffCreate(BaseModel):
     staff_type: str
 
 
+
+class MedicalStaffCreate(BaseModel):
+    staff_id: int
+    med_specialization: str
+    certification: str
+    YOE: int
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
 
 
-#do we want login , sanitization, validation, error handling etc
-# there is optimization as python classes are slow
+class CoachCreate(BaseModel):
+    staff_id: int
+    role: str
+    team_id: Optional[int] = None
+
+
+class PlayerCreate(BaseModel):
+    first_name: str
+    middle_name: Optional[str] = None
+    last_name: str
+    salary: float
+    positions: Optional[str] = None
+    is_active: Optional[bool] = True
+    is_injured: Optional[bool] = False
+    transfer_value: Optional[float] = None
+    contract_end_date: Optional[date] = None
+    scouted_player: Optional[bool] = False
 
 
 
+class MedicalReportCreate(BaseModel):
+    player_id: int
+    summary: Optional[str] = None
+    report_date: date
+    treatment: Optional[str] = None
+    severity_of_injury: Optional[str] = None
 
 
+class ScoutCreate(BaseModel):
+    staff_id: int
+    region: Optional[str] = None
+    YOE: int
 
 
 
@@ -173,7 +206,6 @@ class MedicalStaff:
     def create(medical_staff):
         conn = get_db_connection()
         cursor = conn.cursor()
-        # table is `med_staff` with columns med_specialization, certification, YOE
         query = """
         INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
         VALUES (%s, %s, %s, %s)
