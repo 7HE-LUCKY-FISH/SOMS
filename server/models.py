@@ -73,19 +73,28 @@ class Staff:
         self.staff_type = staff_type
 
     @staticmethod
-    def create(staff):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, staff_type)
+    def create(staff):  
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, staff_type)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (staff.first_name, staff.middle_name, staff.last_name,
+            cursor.execute(query, (staff.first_name, staff.middle_name, staff.last_name,
                                staff.email, staff.salary, staff.age, staff.staff_type))
-        last_id = cursor.lastrowid
-        conn.commit()
-        cursor.close()
-        conn.close()
+            last_id = cursor.lastrowid
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating staff: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return last_id
 
 class Coach:
@@ -96,16 +105,25 @@ class Coach:
 
     @staticmethod
     def create(coach):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO coach (staff_id, role, team_id)
-        VALUES (%s, %s, %s)
-        """
-        cursor.execute(query, (coach.staff_id, coach.role, coach.team_id))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO coach (staff_id, role, team_id)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (coach.staff_id, coach.role, coach.team_id))
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating coach: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return coach.staff_id
 
 class Player:
@@ -125,21 +143,30 @@ class Player:
 
     @staticmethod
     def create(player):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
-                           is_active, is_injured, transfer_value, contract_end_date, scouted_player)
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
+                               is_active, is_injured, transfer_value, contract_end_date, scouted_player)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (player.first_name, player.middle_name, player.last_name,
-                               player.salary, player.positions, player.is_active,
-                               player.is_injured, player.transfer_value, player.contract_end_date,
-                               player.scouted_player))
-        last_id = cursor.lastrowid
-        conn.commit()
-        cursor.close()
-        conn.close()
+            """
+            cursor.execute(query, (player.first_name, player.middle_name, player.last_name,
+                                player.salary, player.positions, player.is_active,
+                                player.is_injured, player.transfer_value, player.contract_end_date,
+                                player.scouted_player))
+            last_id = cursor.lastrowid
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating player: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return last_id
 
     @staticmethod
@@ -182,16 +209,25 @@ class Scout:
     
     @staticmethod
     def create(scout):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO scout (staff_id, region, YOE)
-        VALUES (%s, %s, %s)
-        """
-        cursor.execute(query, (scout.staff_id, scout.region, scout.YOE))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO scout (staff_id, region, YOE)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (scout.staff_id, scout.region, scout.YOE))
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating scout: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return scout.staff_id
 
 
@@ -204,16 +240,25 @@ class MedicalStaff:
 
     @staticmethod
     def create(medical_staff):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
-        VALUES (%s, %s, %s, %s)
-        """
-        cursor.execute(query, (medical_staff.staff_id, medical_staff.med_specialization, medical_staff.certification, medical_staff.YOE))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (medical_staff.staff_id, medical_staff.med_specialization, medical_staff.certification, medical_staff.YOE))
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating medical staff: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return medical_staff.staff_id
 
 
@@ -228,17 +273,26 @@ class MedicalReport:
 
     @staticmethod
     def create(medical_report):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
-        VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (medical_report.player_id, medical_report.summary,
-                               medical_report.report_date, medical_report.treatment,
-                               medical_report.severity_of_injury))
-        last_id = cursor.lastrowid
-        conn.commit()
-        cursor.close()
-        conn.close()
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (medical_report.player_id, medical_report.summary,
+                                   medical_report.report_date, medical_report.treatment,
+                                   medical_report.severity_of_injury))
+            last_id = cursor.lastrowid
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating medical report: {e}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return last_id
