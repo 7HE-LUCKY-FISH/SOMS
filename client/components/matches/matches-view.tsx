@@ -1,75 +1,83 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, CalendarIcon, MapPin } from 'lucide-react'
+import { Plus, CalendarIcon, MapPin, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
+import { apiGetAllFixtures, apiGetUpcomingFixtures } from '@/lib/api'
 
 interface Match {
-  id: string
-  opponent: string
-  competition: string
-  venue: 'Home' | 'Away'
-  date: string
-  time: string
-  status: 'upcoming' | 'completed'
+  match_id: number
+  name: string
+  venue: string
+  match_time: string
+  opponent_team: string
+  match_date: string
   result?: string
 }
-
-const mockMatches: Match[] = [
-  {
-    id: '1',
-    opponent: 'City FC',
-    competition: 'League',
-    venue: 'Home',
-    date: '2025-11-16',
-    time: '15:00',
-    status: 'upcoming'
-  },
-  {
-    id: '2',
-    opponent: 'Rangers SC',
-    competition: 'Cup',
-    venue: 'Away',
-    date: '2025-11-20',
-    time: '19:00',
-    status: 'upcoming'
-  },
-  {
-    id: '3',
-    opponent: 'United FC',
-    competition: 'League',
-    venue: 'Home',
-    date: '2025-11-10',
-    time: '15:00',
-    status: 'completed',
-    result: '2 - 1'
-  },
-  {
-    id: '4',
-    opponent: 'Athletic Club',
-    competition: 'League',
-    venue: 'Away',
-    date: '2025-11-03',
-    time: '18:00',
-    status: 'completed',
-    result: '3 - 2'
-  },
-]
 
 interface MatchesViewProps {
   userRole: UserRole
 }
 
 export function MatchesView({ userRole }: MatchesViewProps) {
+  const [matches, setMatches] = useState<Match[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const canEdit = userRole === 'coach' || userRole === 'admin'
-  const [view, setView] = useState<'list' | 'calendar'>('list')
 
-  const upcomingMatches = mockMatches.filter(m => m.status === 'upcoming')
-  const completedMatches = mockMatches.filter(m => m.status === 'completed')
+  useEffect(() => {
+    async function fetchMatches() {
+      try {
+        setIsLoading(true)
+        const response = await apiGetAllFixtures()
+        if (response.data) {
+          setMatches(response.data)
+        }
+      } catch (err) {
+        console.error('[v0] Error fetching matches:', err)
+        setError('Failed to load matches')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMatches()
+  }, [])
+
+  const upcomingMatches = matches.filter(m => !m.result)
+  const completedMatches = matches.filter(m => m.result)
+
+  if (isLoading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="size-5 animate-spin" />
+            <span className="text-muted-foreground">Loading matches...</span>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="text-center">
+            <p className="text-destructive">{error}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -99,27 +107,27 @@ export function MatchesView({ userRole }: MatchesViewProps) {
             </Card>
           ) : (
             upcomingMatches.map((match) => (
-              <Card key={match.id} className="p-6 hover:border-primary transition-colors">
+              <Card key={match.match_id} className="p-6 hover:border-primary transition-colors">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-start gap-4 mb-3">
                       <div className={`size-12 rounded-xl flex items-center justify-center ${
-                        match.venue === 'Home' ? 'bg-primary/10' : 'bg-accent/20'
+                        match.venue.toLowerCase().includes('home') ? 'bg-primary/10' : 'bg-accent/20'
                       }`}>
                         <MapPin className={`size-6 ${
-                          match.venue === 'Home' ? 'text-primary' : 'text-accent-foreground'
+                          match.venue.toLowerCase().includes('home') ? 'text-primary' : 'text-accent-foreground'
                         }`} />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-foreground mb-1">vs {match.opponent}</h3>
-                        <p className="text-sm text-muted-foreground">{match.competition}</p>
+                        <h3 className="text-xl font-semibold text-foreground mb-1">vs {match.opponent_team}</h3>
+                        <p className="text-sm text-muted-foreground">{match.name}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="size-4 text-muted-foreground" />
                         <span className="text-foreground">
-                          {new Date(match.date).toLocaleDateString('en-US', { 
+                          {new Date(match.match_date).toLocaleDateString('en-US', { 
                             weekday: 'short', 
                             month: 'short', 
                             day: 'numeric',
@@ -129,11 +137,11 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Time:</span>
-                        <span className="text-foreground">{match.time}</span>
+                        <span className="text-foreground">{match.match_time}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                          match.venue === 'Home' 
+                          match.venue.toLowerCase().includes('home')
                             ? 'bg-primary/10 text-primary' 
                             : 'bg-accent/20 text-accent-foreground'
                         }`}>
@@ -143,7 +151,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/matches/${match.id}`}>
+                    <Link href={`/matches/${match.match_id}`}>
                       <Button variant="outline">View Details</Button>
                     </Link>
                   </div>
@@ -160,7 +168,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
             </Card>
           ) : (
             completedMatches.map((match) => (
-              <Card key={match.id} className="p-6 hover:border-primary transition-colors">
+              <Card key={match.match_id} className="p-6 hover:border-primary transition-colors">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-start gap-4 mb-3">
@@ -168,8 +176,8 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                         <CalendarIcon className="size-6 text-muted-foreground" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-foreground mb-1">vs {match.opponent}</h3>
-                        <p className="text-sm text-muted-foreground">{match.competition}</p>
+                        <h3 className="text-xl font-semibold text-foreground mb-1">vs {match.opponent_team}</h3>
+                        <p className="text-sm text-muted-foreground">{match.name}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-foreground">{match.result}</p>
@@ -180,7 +188,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="size-4 text-muted-foreground" />
                         <span className="text-foreground">
-                          {new Date(match.date).toLocaleDateString('en-US', { 
+                          {new Date(match.match_date).toLocaleDateString('en-US', { 
                             month: 'short', 
                             day: 'numeric',
                             year: 'numeric'
@@ -195,7 +203,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/matches/${match.id}`}>
+                    <Link href={`/matches/${match.match_id}`}>
                       <Button variant="outline">Match Report</Button>
                     </Link>
                   </div>

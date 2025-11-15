@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,11 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SoccerPitch } from '@/components/lineup/soccer-pitch'
 import { PlayerList } from '@/components/lineup/player-list'
-import { Save, Download, RotateCcw } from 'lucide-react'
-
-interface LineupBuilderProps {
-  user: User
-}
+import { Save, Download, RotateCcw, Loader2 } from 'lucide-react'
+import { apiGetAllPlayers } from '@/lib/api'
+import { Card } from '@/components/ui/card'
 
 export type Formation = '4-3-3' | '4-2-3-1' | '3-5-2' | '4-4-2' | 'custom'
 
@@ -31,99 +29,65 @@ export interface PitchSlot {
   player: Player | null
 }
 
-// Mock player data
-const mockPlayers: Player[] = [
-  { id: '1', name: 'John Keeper', position: 'GK', availability: 'available', number: 1 },
-  { id: '2', name: 'Alex Silva', position: 'CB', availability: 'available', number: 4 },
-  { id: '3', name: 'Tom White', position: 'CB', availability: 'available', number: 5 },
-  { id: '4', name: 'Mike Brown', position: 'LB', availability: 'available', number: 3 },
-  { id: '5', name: 'Chris Johnson', position: 'RB', availability: 'available', number: 2 },
-  { id: '6', name: 'David Lee', position: 'CDM', availability: 'doubtful', number: 6 },
-  { id: '7', name: 'Paul Martinez', position: 'CM', availability: 'available', number: 8 },
-  { id: '8', name: 'James Wilson', position: 'CM', availability: 'doubtful', number: 10 },
-  { id: '9', name: 'Marcus Silva', position: 'LW', availability: 'out', number: 11 },
-  { id: '10', name: 'Ryan Taylor', position: 'RW', availability: 'available', number: 7 },
-  { id: '11', name: 'Lucas Garcia', position: 'ST', availability: 'available', number: 9 },
-  { id: '12', name: 'Tom Anderson', position: 'ST', availability: 'available', number: 19 },
-  { id: '13', name: 'Ben Roberts', position: 'GK', availability: 'available', number: 13 },
-  { id: '14', name: 'Sam Davis', position: 'CB', availability: 'available', number: 15 },
-  { id: '15', name: 'Jack Miller', position: 'CM', availability: 'available', number: 16 },
-]
-
 const formationTemplates: Record<Formation, Omit<PitchSlot, 'player'>[]> = {
   '4-3-3': [
-    // GK
     { id: 'gk', x: 50, y: 90 },
-    // Defense
     { id: 'lb', x: 20, y: 70 },
     { id: 'cb1', x: 40, y: 70 },
     { id: 'cb2', x: 60, y: 70 },
     { id: 'rb', x: 80, y: 70 },
-    // Midfield
     { id: 'cm1', x: 30, y: 50 },
     { id: 'cm2', x: 50, y: 50 },
     { id: 'cm3', x: 70, y: 50 },
-    // Attack
     { id: 'lw', x: 20, y: 25 },
     { id: 'st', x: 50, y: 20 },
     { id: 'rw', x: 80, y: 25 },
   ],
   '4-2-3-1': [
-    // GK
     { id: 'gk', x: 50, y: 90 },
-    // Defense
     { id: 'lb', x: 20, y: 70 },
     { id: 'cb1', x: 40, y: 70 },
     { id: 'cb2', x: 60, y: 70 },
     { id: 'rb', x: 80, y: 70 },
-    // CDM
     { id: 'cdm1', x: 35, y: 55 },
     { id: 'cdm2', x: 65, y: 55 },
-    // CAM
     { id: 'lam', x: 25, y: 38 },
     { id: 'cam', x: 50, y: 35 },
     { id: 'ram', x: 75, y: 38 },
-    // ST
     { id: 'st', x: 50, y: 18 },
   ],
   '3-5-2': [
-    // GK
     { id: 'gk', x: 50, y: 90 },
-    // Defense
     { id: 'cb1', x: 30, y: 70 },
     { id: 'cb2', x: 50, y: 70 },
     { id: 'cb3', x: 70, y: 70 },
-    // Midfield
     { id: 'lwb', x: 15, y: 50 },
     { id: 'cm1', x: 35, y: 50 },
     { id: 'cm2', x: 50, y: 48 },
     { id: 'cm3', x: 65, y: 50 },
     { id: 'rwb', x: 85, y: 50 },
-    // Attack
     { id: 'st1', x: 40, y: 20 },
     { id: 'st2', x: 60, y: 20 },
   ],
   '4-4-2': [
-    // GK
     { id: 'gk', x: 50, y: 90 },
-    // Defense
     { id: 'lb', x: 20, y: 70 },
     { id: 'cb1', x: 40, y: 70 },
     { id: 'cb2', x: 60, y: 70 },
     { id: 'rb', x: 80, y: 70 },
-    // Midfield
     { id: 'lm', x: 20, y: 45 },
     { id: 'cm1', x: 40, y: 48 },
     { id: 'cm2', x: 60, y: 48 },
     { id: 'rm', x: 80, y: 45 },
-    // Attack
     { id: 'st1', x: 40, y: 20 },
     { id: 'st2', x: 60, y: 20 },
   ],
   'custom': []
 }
 
-export function LineupBuilder({ user }: LineupBuilderProps) {
+export function LineupBuilder({ user }: { user: User }) {
+  const [players, setPlayers] = useState<Player[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [formation, setFormation] = useState<Formation>('4-3-3')
   const [lineupName, setLineupName] = useState('')
   const [slots, setSlots] = useState<PitchSlot[]>(
@@ -131,6 +95,31 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
   )
   const [bench, setBench] = useState<Player[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    async function fetchPlayers() {
+      try {
+        setIsLoading(true)
+        const response = await apiGetAllPlayers()
+        if (response.data) {
+          const transformedPlayers: Player[] = response.data.map(p => ({
+            id: String(p.player_id),
+            name: `${p.first_name} ${p.middle_name ? p.middle_name + ' ' : ''}${p.last_name}`,
+            position: p.positions || 'N/A',
+            availability: p.is_injured ? 'out' : (p.is_active ? 'available' : 'doubtful'),
+            number: p.player_id
+          }))
+          setPlayers(transformedPlayers)
+        }
+      } catch (err) {
+        console.error('[v0] Error fetching players:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchPlayers()
+  }, [])
 
   const handleFormationChange = (newFormation: Formation) => {
     setFormation(newFormation)
@@ -144,15 +133,12 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
   }
 
   const handleDropOnSlot = (slotId: string, player: Player) => {
-    // Remove player from any existing slot
     const updatedSlots = slots.map(slot => 
       slot.player?.id === player.id ? { ...slot, player: null } : slot
     )
     
-    // Remove from bench if exists
     setBench(prev => prev.filter(p => p.id !== player.id))
     
-    // Add to new slot
     const finalSlots = updatedSlots.map(slot =>
       slot.id === slotId ? { ...slot, player } : slot
     )
@@ -161,12 +147,10 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
   }
 
   const handleDropOnBench = (player: Player) => {
-    // Remove from slots
     setSlots(prev => prev.map(slot =>
       slot.player?.id === player.id ? { ...slot, player: null } : slot
     ))
     
-    // Add to bench if not already there
     if (!bench.find(p => p.id === player.id)) {
       setBench(prev => [...prev, player])
     }
@@ -189,15 +173,25 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
     ...bench.map(p => p.id)
   ])
 
-  const availablePlayers = mockPlayers.filter(p => !assignedPlayerIds.has(p.id))
+  const availablePlayers = players.filter(p => !assignedPlayerIds.has(p.id))
   const filteredPlayers = availablePlayers.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.position.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  if (isLoading) {
+    return (
+      <Card className="p-12">
+        <div className="flex items-center justify-center gap-2">
+          <Loader2 className="size-5 animate-spin" />
+          <span className="text-muted-foreground">Loading players...</span>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <div className="h-full flex flex-col lg:flex-row">
-      {/* Left Panel - Player List */}
       <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border bg-card flex flex-col max-h-[40vh] lg:max-h-none">
         <div className="p-4 border-b border-border space-y-4">
           <div>
@@ -216,7 +210,6 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
         />
       </div>
 
-      {/* Center - Pitch */}
       <div className="flex-1 flex flex-col bg-background overflow-auto">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 w-full sm:w-auto">
@@ -266,7 +259,6 @@ export function LineupBuilder({ user }: LineupBuilderProps) {
           />
         </div>
 
-        {/* Bench */}
         <div
           className="border-t border-border bg-card p-4"
           onDragOver={(e) => e.preventDefault()}
