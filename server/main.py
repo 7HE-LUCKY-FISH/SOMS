@@ -373,7 +373,9 @@ def create_scout(scout: ScoutCreate):
     except mysql.connector.Error as db_err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
-    except Exception as err:
+    except mysql.connector.Error as db_err:
+         conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
     finally:
