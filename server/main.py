@@ -72,6 +72,9 @@ def create_staff_member(staff: StaffCreate):
         staff_id = Staff.create(cursor, staff)
         conn.commit()
         return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as db_err:
+        # database-specific errors
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
@@ -350,6 +353,8 @@ def create_scout(scout: ScoutCreate):
         staff_id = Scout.create(scout, cursor)
         conn.commit()
         return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
@@ -373,6 +378,8 @@ def create_medical_staff(ms: MedicalStaffCreate):
         staff_id = MedicalStaff.create(cursor, ms)
         conn.commit()
         return {"status": "success", "staff_id": staff_id}
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
@@ -397,6 +404,8 @@ def create_medical_report(mr: MedicalReportCreate):
         med_report_id = MedicalReport.create(cursor, mr)
         conn.commit()
         return {"status": "success", "med_report_id": med_report_id}
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating medical staff: {str(err)}")    
@@ -425,12 +434,13 @@ def get_upcoming_fixtures():
         for r in rows:
             serialized.append(_serialize_row_dates(r))
         return {"status": "success", "count": len(serialized), "data": serialized}
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
     finally:
         cursor.close()
         connection.close()
-
 
 
 if __name__ == "__main__":
