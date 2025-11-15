@@ -7,9 +7,11 @@ interface SoccerPitchProps {
   slots: PitchSlot[]
   onDropOnSlot: (slotId: string, player: Player) => void
   onRemoveFromSlot: (slotId: string) => void
+  // Optional: override background gradient classes
+  pitchBgClass?: string
 }
 
-export function SoccerPitch({ slots, onDropOnSlot, onRemoveFromSlot }: SoccerPitchProps) {
+export function SoccerPitch({ slots, onDropOnSlot, onRemoveFromSlot, pitchBgClass }: SoccerPitchProps) {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
@@ -26,23 +28,23 @@ export function SoccerPitch({ slots, onDropOnSlot, onRemoveFromSlot }: SoccerPit
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="relative aspect-[3/4] bg-gradient-to-b from-accent/20 via-accent/10 to-accent/20 rounded-2xl border-2 border-accent/30 overflow-hidden">
+      <div className={`relative aspect-[3/4] rounded-2xl border-2 overflow-hidden ${pitchBgClass ?? 'bg-gradient-to-b from-emerald-800/80 via-emerald-700/75 to-emerald-800/80 border-emerald-600/70'}`}>
         {/* Pitch markings */}
         <div className="absolute inset-0">
           {/* Center line */}
-          <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-white/30" />
+          <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-white/70" />
           
           {/* Center circle */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-32 border-2 border-white/30 rounded-full" />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-3 bg-white/30 rounded-full" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-32 border-2 border-white/70 rounded-full" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-3 bg-white/80 rounded-full" />
           
           {/* Penalty boxes */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/5 h-1/6 border-2 border-t-0 border-white/30" />
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/5 h-1/6 border-2 border-b-0 border-white/30" />
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/5 h-1/6 border-2 border-t-0 border-white/70" />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/5 h-1/6 border-2 border-b-0 border-white/70" />
           
           {/* Goal areas */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2/5 h-[8%] border-2 border-t-0 border-white/30" />
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-2/5 h-[8%] border-2 border-b-0 border-white/30" />
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2/5 h-[8%] border-2 border-t-0 border-white/70" />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-2/5 h-[8%] border-2 border-b-0 border-white/70" />
         </div>
 
         {/* Player slots */}
@@ -77,7 +79,7 @@ export function SoccerPitch({ slots, onDropOnSlot, onRemoveFromSlot }: SoccerPit
                 </button>
               </div>
             ) : (
-              <div className="size-16 sm:size-20 border-2 border-dashed border-white/40 rounded-2xl flex items-center justify-center hover:border-white/60 hover:bg-white/5 transition-colors">
+              <div className="size-16 sm:size-20 border-2 border-dashed border-white/60 rounded-2xl flex items-center justify-center hover:border-white/80 hover:bg-white/10 transition-colors">
                 <span className="text-xs text-white/50">Drop</span>
               </div>
             )}
