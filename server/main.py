@@ -66,11 +66,18 @@ def health_check() -> Dict[str, str]:
 
 @app.post("/staff/create", status_code=201)
 def create_staff_member(staff: StaffCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        staff_id = Staff.create(staff)
+        staff_id = Staff.create(cursor, staff)
+        conn.commit()
         return {"status": "success", "staff_id": staff_id}
-    except mysql.connector.Error as err:
+    except Exception as err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.post("/login")
@@ -95,8 +102,12 @@ def login(credentials: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         return {"status": "success", "staff_id": row.get("staff_id")}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        # database-specific errors
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        # catch-all for other errors
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
         connection.close()
@@ -115,8 +126,10 @@ def get_all_staff():
         # serialize any date fields
         rows = [_serialize_row_dates(r) for r in rows]
         return {"status": "success", "count": len(rows), "data": rows}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
         connection.close()
@@ -138,8 +151,10 @@ def get_all_scouts():
             rows = []
         rows = [_serialize_row_dates(r) for r in rows]
         return {"status": "success", "count": len(rows), "data": rows}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
         connection.close()
@@ -161,8 +176,10 @@ def get_all_players():
             rows = []
         rows = [_serialize_row_dates(r) for r in rows]
         return {"status": "success", "count": len(rows), "data": rows}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
         connection.close()
@@ -187,8 +204,10 @@ def get_fixtures():
         for r in rows:
             serialized.append(_serialize_row_dates(r))
         return {"status": "success", "count": len(serialized), "data": serialized}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
         connection.close()
@@ -203,11 +222,21 @@ class CoachCreate(BaseModel):
 
 @app.post("/coach/create", status_code=201)
 def create_coach(coach: CoachCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        staff_id = Coach.create(coach)
+        staff_id = Coach.create(coach, cursor)
+        conn.commit()
         return {"status": "success", "staff_id": staff_id}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        conn.rollback()  # rollback on DB errors
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        conn.rollback()  # rollback on any other errors
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 
 class PlayerCreate(BaseModel):
@@ -225,11 +254,21 @@ class PlayerCreate(BaseModel):
 
 @app.post("/player/create", status_code=201)
 def create_player(player: PlayerCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        player_id = Player.create(player)
+        player_id = Player.create(player, cursor)
+        conn.commit()
         return {"status": "success", "player_id": player_id}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        conn.rollback()  # Rollback on database errors
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        conn.rollback()  # Rollback on any other unexpected errors
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.post("/player/create-with-photo", status_code=201)
@@ -246,6 +285,8 @@ async def create_player_with_photo(
     scouted_player: Optional[bool] = Form(False),
     file: UploadFile = File(None),
 ):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     # build Player instance
     contract_date = None
     if contract_end_date:
@@ -281,10 +322,18 @@ async def create_player_with_photo(
             raise HTTPException(status_code=400, detail=f"Error reading uploaded file: {e}")
 
     try:
-        player_id = Player.create_with_photo(player_obj, photo_bytes, content_type, filename, size)
+        player_id = Player.create_with_photo(player_obj, photo_bytes, content_type, filename, size, cursor)
+        conn.commit()
         return {"status": "success", "player_id": player_id}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except mysql.connector.Error as db_err:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
+    except Exception as err:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 
 class ScoutCreate(BaseModel):
@@ -295,11 +344,18 @@ class ScoutCreate(BaseModel):
 
 @app.post("/scout/create", status_code=201)
 def create_scout(scout: ScoutCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        staff_id = Scout.create(scout)
+        staff_id = Scout.create(scout, cursor)
+        conn.commit()
         return {"status": "success", "staff_id": staff_id}
-    except mysql.connector.Error as err:
+    except Exception as err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        conn.close()
 
 
 class MedicalStaffCreate(BaseModel):
@@ -311,11 +367,18 @@ class MedicalStaffCreate(BaseModel):
 
 @app.post("/medical_staff/create", status_code=201)
 def create_medical_staff(ms: MedicalStaffCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        staff_id = MedicalStaff.create(ms)
+        staff_id = MedicalStaff.create(cursor, ms)
+        conn.commit()
         return {"status": "success", "staff_id": staff_id}
-    except mysql.connector.Error as err:
+    except Exception as err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        cursor.close()
+        conn.close()
 
 
 class MedicalReportCreate(BaseModel):
@@ -328,11 +391,18 @@ class MedicalReportCreate(BaseModel):
 
 @app.post("/medical_report/create", status_code=201)
 def create_medical_report(mr: MedicalReportCreate):
+    conn  = get_db_connection()
+    cursor = conn.cursor()
     try:
-        med_report_id = MedicalReport.create(mr)
+        med_report_id = MedicalReport.create(cursor, mr)
+        conn.commit()
         return {"status": "success", "med_report_id": med_report_id}
-    except mysql.connector.Error as err:
-        raise HTTPException(status_code=500, detail=str(err))
+    except Exception as err:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating medical staff: {str(err)}")    
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -355,7 +425,7 @@ def get_upcoming_fixtures():
         for r in rows:
             serialized.append(_serialize_row_dates(r))
         return {"status": "success", "count": len(serialized), "data": serialized}
-    except mysql.connector.Error as err:
+    except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
     finally:
         cursor.close()
