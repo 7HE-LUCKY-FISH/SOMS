@@ -106,10 +106,8 @@ def login(credentials: LoginRequest):
 
         return {"status": "success", "staff_id": row.get("staff_id")}
     except mysql.connector.Error as db_err:
-        # database-specific errors
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
-        # catch-all for other errors
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
         cursor.close()
