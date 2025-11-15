@@ -74,13 +74,16 @@ def create_staff_member(staff: StaffCreate):
         return {"status": "success", "staff_id": staff_id}
     except mysql.connector.Error as db_err:
         # database-specific errors
+        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 @app.post("/login")
@@ -110,8 +113,10 @@ def login(credentials: LoginRequest):
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 #get staff
 @app.get("/staff", response_model=Dict)
@@ -132,8 +137,10 @@ def get_all_staff():
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 #get scouts
 @app.get("/scouts", response_model=Dict)
@@ -157,8 +164,10 @@ def get_all_scouts():
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 #player data
@@ -182,8 +191,10 @@ def get_all_players():
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 #this might be buggy due to the DATE time to normal date conversion
 
@@ -210,8 +221,10 @@ def get_fixtures():
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 # --- Create endpoints for models ---
@@ -223,21 +236,23 @@ class CoachCreate(BaseModel):
 
 @app.post("/coach/create", status_code=201)
 def create_coach(coach: CoachCreate):
-    conn = get_db_connection()
+    connection = get_db_connection()
     cursor = conn.cursor()
     try:
         staff_id = Coach.create(coach, cursor)
-        conn.commit()
+        connection.commit()
         return {"status": "success", "staff_id": staff_id}
     except mysql.connector.Error as db_err:
         conn.rollback()  # rollback on DB errors
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
-        conn.rollback()  # rollback on any other errors
+        connection.rollback()  # rollback on any other errors
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 class PlayerCreate(BaseModel):
@@ -255,21 +270,23 @@ class PlayerCreate(BaseModel):
 
 @app.post("/player/create", status_code=201)
 def create_player(player: PlayerCreate):
-    conn = get_db_connection()
+    connection = get_db_connection()
     cursor = conn.cursor()
     try:
         player_id = Player.create(player, cursor)
-        conn.commit()
+        connection.commit()
         return {"status": "success", "player_id": player_id}
     except mysql.connector.Error as db_err:
-        conn.rollback()  # Rollback on database errors
+        connection.rollback()  # Rollback on database errors
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()  # Rollback on any other unexpected errors
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 @app.post("/player/create-with-photo", status_code=201)
@@ -333,8 +350,10 @@ async def create_player_with_photo(
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(err)}")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 class ScoutCreate(BaseModel):
@@ -352,13 +371,16 @@ def create_scout(scout: ScoutCreate):
         conn.commit()
         return {"status": "success", "staff_id": staff_id}
     except mysql.connector.Error as db_err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 class MedicalStaffCreate(BaseModel):
@@ -377,13 +399,16 @@ def create_medical_staff(ms: MedicalStaffCreate):
         conn.commit()
         return {"status": "success", "staff_id": staff_id}
     except mysql.connector.Error as db_err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 class MedicalReportCreate(BaseModel):
@@ -403,13 +428,16 @@ def create_medical_report(mr: MedicalReportCreate):
         conn.commit()
         return {"status": "success", "med_report_id": med_report_id}
     except mysql.connector.Error as db_err:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(db_err)}")
     except Exception as err:
         conn.rollback()
-        raise HTTPException(status_code=500, detail=f"Error creating medical staff: {str(err)}")    
+        raise HTTPException(status_code=500, detail=f"Error creating medical report: {str(err)}")    
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 
@@ -437,8 +465,10 @@ def get_upcoming_fixtures():
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":
