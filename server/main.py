@@ -129,7 +129,7 @@ def create_account(payload: StaffAccountCreate):
             raise HTTPException(status_code=409, detail="Account already exists for this staff.")
 
         # Hash the password and store the account
-        password_hash = generate_password_hash(payload.password)
+        password_hash = generate_password_hash(payload.password, method='pbkdf2:sha256', salt_length=12)
         cursor.execute(
             "INSERT INTO staff_account (staff_id, username, password_hash, is_active) VALUES (%s, %s, %s, %s)",
             (payload.staff_id, payload.username, password_hash, payload.is_active)
