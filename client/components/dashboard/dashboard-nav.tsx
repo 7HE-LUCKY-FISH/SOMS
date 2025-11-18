@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { User } from '@/lib/auth'
 import { logout } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { Shield, LayoutDashboard, Users, UserCircle, Activity, Calendar, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react'
+import { Shield, LayoutDashboard, Users, UserCircle, Activity, Calendar, BarChart3, Settings, LogOut, Menu, X, Home } from 'lucide-react'
 import { useState } from 'react'
 
 interface DashboardNavProps {
@@ -15,6 +15,7 @@ interface DashboardNavProps {
 export function DashboardNav({ user }: DashboardNavProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const showHomeButton = pathname !== '/dashboard'
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['coach', 'medical', 'player', 'admin'] },
@@ -23,7 +24,6 @@ export function DashboardNav({ user }: DashboardNavProps) {
     { href: '/players', label: 'Players', icon: UserCircle, roles: ['coach', 'medical', 'player', 'admin'] },
     { href: '/matches', label: 'Matches', icon: Calendar, roles: ['coach', 'medical', 'player', 'admin'] },
     { href: '/medical', label: 'Medical Center', icon: Activity, roles: ['coach', 'medical', 'admin'] },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['coach', 'medical', 'admin'] },
     { href: '/admin', label: 'Admin', icon: Settings, roles: ['admin'] },
   ]
 
@@ -43,6 +43,14 @@ export function DashboardNav({ user }: DashboardNavProps) {
       >
         {isMobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
       </button>
+
+      {showHomeButton && (
+        <Link href="/dashboard" className="lg:hidden fixed top-4 right-4 z-50">
+          <Button size="icon" className="rounded-xl">
+            <Home className="size-5" />
+          </Button>
+        </Link>
+      )}
 
       {/* Sidebar */}
       <aside className={`

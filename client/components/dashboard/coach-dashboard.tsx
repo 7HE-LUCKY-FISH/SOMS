@@ -1,14 +1,58 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { User } from '@/lib/auth'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus, Calendar, Users, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, Users, AlertCircle, Loader2 } from 'lucide-react'
+import { apiGetUpcomingFixtures, apiGetAllPlayers, apiGetMedicalReports } from '@/lib/api'
 
 interface CoachDashboardProps {
   user: User
 }
 
 export function CoachDashboard({ user }: CoachDashboardProps) {
+  const [nextMatch, setNextMatch] = useState<any>(null)
+  const [playerStats, setPlayerStats] = useState({ available: 0, doubtful: 0, injured: 0 })
+  const [unavailablePlayers, setUnavailablePlayers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const matchesRes = await apiGetUpcomingFixtures()
+        if (matchesRes.data && matchesRes.data.length > 0) {
+          setNextMatch(matchesRes.data[0])
+        }
+
+        const playersRes = await apiGetAllPlayers()
+        if (playersRes.data) {
+          const available = playersRes.data.filter(p => p.is_active && !p.is_injured).length
+          const injured = playersRes.data.filter(p => p.is_injured).length
+          const total = playersRes.data.filter(p => p.is_active).length
+          setPlayerStats({ available, doubtful: total - available - injured, injured })
+
+          const injured_players = playersRes.data.filter(p => p.is_injured).slice(0, 3)
+          setUnavailablePlayers(injured_players)
+        }
+      } catch (error) {
+        console.error('[v0] Error loading dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadDashboardData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8 flex items-center justify-center min-h-96">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 lg:p-8 space-y-8">
       <div>
@@ -65,21 +109,29 @@ export function CoachDashboard({ user }: CoachDashboardProps) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="p-6">
           <h3 className="font-semibold text-foreground mb-4">Next Match</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Opponent</span>
-              <span className="font-medium text-foreground">City FC</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Date</span>
-              <span className="font-medium text-foreground">Nov 16, 2025</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Venue</span>
-              <span className="font-medium text-foreground">Home</span>
-            </div>
-          </div>
-          <Button className="w-full mt-4" size="sm">View Details</Button>
+          {nextMatch ? (
+            <>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Opponent</span>
+                  <span className="font-medium text-foreground">{nextMatch.opponent_team}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Date</span>
+                  <span className="font-medium text-foreground">{new Date(nextMatch.match_date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Venue</span>
+                  <span className="font-medium text-foreground">{nextMatch.venue}</span>
+                </div>
+              </div>
+              <Link href={`/matches/${nextMatch.match_id}`}>
+                <Button className="w-full mt-4" size="sm">View Details</Button>
+              </Link>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No upcoming matches</p>
+          )}
         </Card>
 
         <Card className="p-6">
@@ -87,15 +139,15 @@ export function CoachDashboard({ user }: CoachDashboardProps) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Available</span>
-              <span className="font-medium text-accent-foreground">23 players</span>
+              <span className="font-medium text-accent-foreground">{playerStats.available} players</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Doubtful</span>
-              <span className="font-medium text-warning-foreground">2 players</span>
+              <span className="font-medium text-warning-foreground">{playerStats.doubtful} players</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Injured</span>
-              <span className="font-medium text-destructive">3 players</span>
+              <span className="font-medium text-destructive">{playerStats.injured} players</span>
             </div>
           </div>
           <Link href="/squad/roster">
@@ -108,20 +160,20 @@ export function CoachDashboard({ user }: CoachDashboardProps) {
             <AlertCircle className="size-5 text-warning-foreground mt-0.5" />
             <h3 className="font-semibold text-foreground">Unavailable Players</h3>
           </div>
-          <div className="space-y-2">
-            <div className="text-sm">
-              <p className="font-medium text-foreground">Marcus Silva</p>
-              <p className="text-muted-foreground text-xs">Knee injury - Out 2 weeks</p>
+          {unavailablePlayers.length > 0 ? (
+            <div className="space-y-2">
+              {unavailablePlayers.map((player) => (
+                <div key={player.player_id} className="text-sm">
+                  <p className="font-medium text-foreground">
+                    {player.first_name} {player.last_name}
+                  </p>
+                  <p className="text-muted-foreground text-xs">Injured</p>
+                </div>
+              ))}
             </div>
-            <div className="text-sm">
-              <p className="font-medium text-foreground">James Wilson</p>
-              <p className="text-muted-foreground text-xs">Ankle sprain - Doubtful</p>
-            </div>
-            <div className="text-sm">
-              <p className="font-medium text-foreground">Tom Anderson</p>
-              <p className="text-muted-foreground text-xs">Hamstring - Out 1 week</p>
-            </div>
-          </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">All players available</p>
+          )}
         </Card>
       </div>
     </div>

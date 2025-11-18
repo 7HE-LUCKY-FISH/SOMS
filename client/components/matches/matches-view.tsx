@@ -5,9 +5,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { Plus, CalendarIcon, MapPin, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
-import { apiGetAllFixtures, apiGetUpcomingFixtures } from '@/lib/api'
+import { apiGetAllMatches, apiCreateMatch } from '@/lib/api'
 
 interface Match {
   match_id: number
@@ -27,26 +30,57 @@ export function MatchesView({ userRole }: MatchesViewProps) {
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  
   const canEdit = userRole === 'coach' || userRole === 'admin'
 
   useEffect(() => {
-    async function fetchMatches() {
-      try {
-        setIsLoading(true)
-        const response = await apiGetAllFixtures()
-        if (response.data) {
-          setMatches(response.data)
-        }
-      } catch (err) {
-        console.error('[v0] Error fetching matches:', err)
-        setError('Failed to load matches')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchMatches()
   }, [])
+
+  async function fetchMatches() {
+    try {
+      setIsLoading(true)
+      const response = await apiGetAllMatches()
+      if (response.data) {
+        setMatches(response.data)
+      }
+    } catch (err) {
+      console.error('[v0] Error fetching matches:', err)
+      setError('Failed to load matches')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleCreateMatch(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsCreating(true)
+    setCreateError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const data = {
+      name: formData.get('name') as string,
+      venue: formData.get('venue') as string,
+      match_time: formData.get('match_time') as string,
+      opponent_team: formData.get('opponent_team') as string,
+      match_date: formData.get('match_date') as string,
+      result: formData.get('result') as string || undefined,
+    }
+
+    try {
+      await apiCreateMatch(data)
+      setIsCreateOpen(false)
+      fetchMatches()
+      e.currentTarget.reset()
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create match')
+    } finally {
+      setIsCreating(false)
+    }
+  }
 
   const upcomingMatches = matches.filter(m => !m.result)
   const completedMatches = matches.filter(m => m.result)
@@ -87,10 +121,61 @@ export function MatchesView({ userRole }: MatchesViewProps) {
           <p className="text-muted-foreground">View fixtures and match results.</p>
         </div>
         {canEdit && (
-          <Button>
-            <Plus className="size-4 mr-2" />
-            Schedule Match
-          </Button>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="size-4 mr-2" />
+                Schedule Match
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Schedule New Match</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreateMatch} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Match Name *</Label>
+                    <Input id="name" name="name" required placeholder="e.g., League Match Week 12" />
+                  </div>
+                  <div>
+                    <Label htmlFor="opponent_team">Opponent Team *</Label>
+                    <Input id="opponent_team" name="opponent_team" required placeholder="e.g., City FC" />
+                  </div>
+                  <div>
+                    <Label htmlFor="venue">Venue *</Label>
+                    <Input id="venue" name="venue" required placeholder="e.g., Home, Away" />
+                  </div>
+                  <div>
+                    <Label htmlFor="match_date">Match Date *</Label>
+                    <Input id="match_date" name="match_date" type="date" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="match_time">Match Time *</Label>
+                    <Input id="match_time" name="match_time" type="time" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="result">Result (Optional)</Label>
+                    <Input id="result" name="result" placeholder="e.g., 2-1, 0-0" />
+                  </div>
+                </div>
+                
+                {createError && (
+                  <p className="text-sm text-destructive">{createError}</p>
+                )}
+                
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isCreating}>
+                    {isCreating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                    Schedule Match
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 

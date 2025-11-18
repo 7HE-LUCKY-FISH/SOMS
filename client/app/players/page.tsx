@@ -16,7 +16,7 @@ export default async function PlayersPage() {
         <p className="text-muted-foreground">Browse all players and view detailed profiles.</p>
       </div>
 
-      <PlayerGrid />
+      <PlayerGrid userRole={user.role} />
     </div>
   )
 }

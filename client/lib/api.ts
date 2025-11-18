@@ -72,6 +72,20 @@ export async function apiCreateStaff(data: {
   })
 }
 
+export async function apiGetStaffById(staffId: number) {
+  return fetchApi<ApiResponse<{
+    staff_id: number
+    first_name: string
+    middle_name?: string
+    last_name: string
+    email: string
+    salary: number
+    age: number
+    date_hired: string
+    staff_type: string
+  }>>(`/staff/${staffId}`)
+}
+
 // Players
 export async function apiGetAllPlayers() {
   return fetchApi<ApiResponse<Array<{
@@ -105,6 +119,10 @@ export async function apiCreatePlayer(data: {
     method: 'POST',
     body: JSON.stringify(data),
   })
+}
+
+export async function apiGetPlayerDetails(playerId: number) {
+  return fetchApi<ApiResponse<any>>(`/player_details/${playerId}`)
 }
 
 // Scouts
@@ -156,7 +174,57 @@ export async function apiGetUpcomingFixtures() {
   }>>>('/fixtures/upcoming')
 }
 
+export async function apiGetAllMatches() {
+  return fetchApi<ApiResponse<Array<{
+    match_id: number
+    name: string
+    venue: string
+    match_time: string
+    opponent_team: string
+    match_date: string
+    result?: string
+  }>>>('/matches')
+}
+
+export async function apiGetMatchById(matchId: number) {
+  return fetchApi<ApiResponse<{
+    match_id: number
+    name: string
+    venue: string
+    match_time: string
+    opponent_team: string
+    match_date: string
+    result?: string
+  }>>(`/match/${matchId}`)
+}
+
+export async function apiCreateMatch(data: {
+  name: string
+  venue: string
+  match_time: string
+  opponent_team: string
+  match_date: string
+  result?: string
+}) {
+  return fetchApi<{ status: string; match_id: number }>('/match/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 // Coaches
+export async function apiGetCoaches() {
+  return fetchApi<ApiResponse<Array<{
+    staff_id: number
+    first_name: string
+    middle_name?: string
+    last_name: string
+    email: string
+    role: string
+    team_id?: number
+  }>>>('/coaches')
+}
+
 export async function apiCreateCoach(data: {
   staff_id: number
   role: string
@@ -169,6 +237,19 @@ export async function apiCreateCoach(data: {
 }
 
 // Medical Staff
+export async function apiGetMedicalStaff() {
+  return fetchApi<ApiResponse<Array<{
+    staff_id: number
+    first_name: string
+    middle_name?: string
+    last_name: string
+    email: string
+    med_specialization: string
+    certification: string
+    YOE: number
+  }>>>('/medical_staff')
+}
+
 export async function apiCreateMedicalStaff(data: {
   staff_id: number
   med_specialization: string
@@ -182,6 +263,14 @@ export async function apiCreateMedicalStaff(data: {
 }
 
 // Medical Reports
+export async function apiGetMedicalReports() {
+  return fetchApi<ApiResponse<Array<any>>>('/medical_reports')
+}
+
+export async function apiGetMedicalReportsByPlayer(playerId: number) {
+  return fetchApi<ApiResponse<Array<any>>>(`/medical_reports/${playerId}`)
+}
+
 export async function apiCreateMedicalReport(data: {
   player_id: number
   summary?: string
@@ -190,6 +279,53 @@ export async function apiCreateMedicalReport(data: {
   severity_of_injury?: string
 }) {
   return fetchApi<{ status: string; med_report_id: number }>('/medical_report/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+// Formations
+export async function apiGetFormations() {
+  return fetchApi<ApiResponse<Array<{
+    formation_id: number
+    code: string
+    name: string
+  }>>>('/formations')
+}
+
+export async function apiCreateFormation(data: {
+  code: string
+  name: string
+}) {
+  return fetchApi<{ status: string; formation_id: number }>('/formation/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+// Lineups
+export async function apiGetLineups() {
+  return fetchApi<ApiResponse<Array<any>>>('/lineups')
+}
+
+export async function apiGetLineupDetails(lineupId: number) {
+  return fetchApi<ApiResponse<any>>(`/lineups/${lineupId}`)
+}
+
+export async function apiCreateLineup(data: {
+  match_id?: number
+  team_id?: number
+  formation_id: number
+  is_starting: boolean
+  minute_applied?: number
+  slots: Array<{
+    slot_no: number
+    player_id: number
+    jersey_number: number
+    captain: boolean
+  }>
+}) {
+  return fetchApi<{ status: string; lineup_id: number }>('/lineup/create', {
     method: 'POST',
     body: JSON.stringify(data),
   })
