@@ -28,12 +28,13 @@ export function hasPermission(userRole: UserRole, permission: string): boolean {
       'view:medical',
       'view:analytics'
     ],
-    player: [
+    scout: [
       'view:dashboard',
-      'view:lineup',
-      'view:roster',
       'view:player',
-      'view:medical:self'
+      'create:scout-report',
+      'edit:scout-report',
+      'view:scout-report',
+      'view:roster'
     ]
   }
 

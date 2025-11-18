@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signup, UserRole } from '@/lib/auth'
-import { Loader2, Shield, Activity, User, Settings } from 'lucide-react'
+import { Loader2, Shield, Activity, Search, Settings } from 'lucide-react'
 
 const roles: { value: UserRole; label: string; description: string; icon: typeof Shield }[] = [
   {
@@ -22,10 +22,10 @@ const roles: { value: UserRole; label: string; description: string; icon: typeof
     icon: Activity
   },
   {
-    value: 'player',
-    label: 'Player',
-    description: 'View stats, schedule, and team information',
-    icon: User
+    value: 'scout',
+    label: 'Scout',
+    description: 'Evaluate players and create scouting reports',
+    icon: Search
   },
   {
     value: 'admin',

@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react'
 
 export function LoginForm() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -21,7 +21,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const result = await login(email, password)
+      const result = await login(username, password)
       
       if (result.success) {
         router.push('/dashboard')
@@ -39,13 +39,13 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="username">Email</Label>
         <Input
-          id="email"
-          type="email"
-          placeholder="your@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          id="username"
+          type="text"
+          placeholder="your-username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
           disabled={isLoading}
         />
@@ -82,13 +82,7 @@ export function LoginForm() {
       </Button>
 
       <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
-        <p className="font-medium mb-2">Demo accounts:</p>
-        <ul className="space-y-1 text-xs">
-          <li>Admin: admin@soms.app / admin123</li>
-          <li>Coach: coach@soms.app / coach123</li>
-          <li>Medical: medical@soms.app / medical123</li>
-          <li>Player: player@soms.app / player123</li>
-        </ul>
+        <p className="font-medium">Login with your backend credentials</p>
       </div>
     </form>
   )
