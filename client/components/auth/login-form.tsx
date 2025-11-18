@@ -43,7 +43,7 @@ export function LoginForm() {
         <Input
           id="username"
           type="text"
-          placeholder="your-username"
+          placeholder="your-email@example.com"//I changed the suggestion text
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required

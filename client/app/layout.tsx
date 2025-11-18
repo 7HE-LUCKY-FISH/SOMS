@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'StreamLine - Streamline Your Workflow, Amplify Your Impact',
+  title: 'SOMS - Streamline Your Workflow, Amplify Your Impact',
   description: 'The all-in-one platform that helps modern teams collaborate, automate, and scale their operations with intelligent tools designed for the way you work.',
   generator: 'v0.app',
   icons: {
