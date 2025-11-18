@@ -24,7 +24,8 @@ from models import (
     MedicalStaffCreate,
     FormationCreate,
     LineupCreate,
-    StaffAccountCreate
+    StaffAccountCreate,
+    MatchCreate
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -833,6 +834,93 @@ def get_player_details(player_id: int):
             connection.close()
 
 
+
+@app.post("/match/create", status_code=201)
+def create_match(match: MatchCreate):
+    """Create a new match"""
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        query = """
+        INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            match.name,
+            match.venue,
+            match.match_time,
+            match.opponent_team,
+            match.match_date,
+            match.result
+        ))
+        match_id = cursor.lastrowid
+        connection.commit()
+        return {"status": "success", "match_id": match_id}
+    except mysql.connector.IntegrityError as err:
+        raise HTTPException(status_code=409, detail=str(err))
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/match/{match_id}", response_model=Dict)
+def get_match_by_id(match_id: int):
+    """Get a single match by ID"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT match_id, name, venue, match_time, opponent_team, match_date, result
+            FROM match_table
+            WHERE match_id = %s
+        """, (match_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Match not found")
+        
+        row = _serialize_row_dates(row)
+        return {"status": "success", "data": row}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/matches", response_model=Dict)
+def get_all_matches():
+    """Get all matches"""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT match_id, name, venue, match_time, opponent_team, match_date, result
+            FROM match_table
+            ORDER BY match_date DESC, match_time DESC
+        """)
+        rows = cursor.fetchall()
+        if rows is None:
+            rows = []
+        
+        serialized = []
+        for r in rows:
+            serialized.append(_serialize_row_dates(r))
+        
+        return {"status": "success", "count": len(serialized), "data": serialized}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

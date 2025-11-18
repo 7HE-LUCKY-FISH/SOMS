@@ -2,6 +2,7 @@ from db_connect_module import get_db_connection
 from typing import Optional, Dict
 from pydantic import BaseModel, EmailStr, Field
 from datetime import date
+from datetime import time as dtime
 
 
 class StaffCreate(BaseModel): 
@@ -14,18 +15,15 @@ class StaffCreate(BaseModel):
     staff_type: str
     date_hired: Optional[date] = None
 
-
 class MedicalStaffCreate(BaseModel):
     staff_id: int
     med_specialization: str
     certification: str
     YOE: int
 
-
 class LoginRequest(BaseModel):
     username: str
     password: str
-
 
 class StaffAccountCreate(BaseModel):
     staff_id: int
@@ -33,12 +31,10 @@ class StaffAccountCreate(BaseModel):
     password: str
     is_active: Optional[bool] = True
 
-
 class CoachCreate(BaseModel):
     staff_id: int
     role: str
     team_id: Optional[int] = None
-
 
 class PlayerCreate(BaseModel):
     first_name: str
@@ -52,14 +48,12 @@ class PlayerCreate(BaseModel):
     contract_end_date: Optional[date] = None
     scouted_player: Optional[bool] = False
 
-
 class MedicalReportCreate(BaseModel):
     player_id: int
     summary: Optional[str] = None
     report_date: date
     treatment: Optional[str] = None
     severity_of_injury: Optional[str] = None
-
 
 class ScoutCreate(BaseModel):
     staff_id: int
@@ -79,6 +73,13 @@ class LineupCreate(BaseModel):
     minute_applied: int = 0
     players: Dict[int, int]
 
+class MatchCreate(BaseModel):
+    name: str
+    venue: Optional[str] = None
+    match_time: Optional[dtime] = None
+    opponent_team: Optional[str] = None
+    match_date: Optional[date] = None
+    result: Optional[str] = None
 
 class Staff:
     def __init__(self, first_name, middle_name, last_name, email, salary, age, staff_type, date_hired=None):
@@ -122,7 +123,7 @@ class Staff:
             print(f"Error creating staff: {e}")
             if conn:
                 conn.rollback()
-            raise  # Re-raise the exception so FastAPI can handle it
+            raise
         finally:
             if cursor:
                 cursor.close()
