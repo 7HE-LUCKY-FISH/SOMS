@@ -12,7 +12,7 @@ class StaffCreate(BaseModel):
     salary: float = Field(..., ge=0)              
     age: int = Field(..., ge=14, le=120)   
     staff_type: str
-
+    date_hired: Optional[date] = None
 
 
 class MedicalStaffCreate(BaseModel):
@@ -53,7 +53,6 @@ class PlayerCreate(BaseModel):
     scouted_player: Optional[bool] = False
 
 
-
 class MedicalReportCreate(BaseModel):
     player_id: int
     summary: Optional[str] = None
@@ -70,7 +69,7 @@ class ScoutCreate(BaseModel):
 class FormationCreate(BaseModel):
     code: str
     name: Optional[str] = None
-    roles: Optional[Dict[int, str]] = None  # {slot_no: custom_label}
+    roles: Optional[Dict[int, str]] = None
 
 class LineupCreate(BaseModel):
     match_id: int
@@ -78,12 +77,11 @@ class LineupCreate(BaseModel):
     formation_id: int
     is_starting: bool = True
     minute_applied: int = 0
-    players: Dict[int, int]  # {slot_no: player_id}; expect keys 1..11
-
+    players: Dict[int, int]
 
 
 class Staff:
-    def __init__(self, first_name, middle_name, last_name, email, salary, age, staff_type):
+    def __init__(self, first_name, middle_name, last_name, email, salary, age, staff_type, date_hired=None):
         self.first_name = first_name
         self.middle_name = middle_name
         self.last_name = last_name
@@ -91,31 +89,47 @@ class Staff:
         self.salary = salary
         self.age = age
         self.staff_type = staff_type
+        self.date_hired = date_hired
 
     @staticmethod
     def create(staff):  
         conn = None
         cursor = None
+        last_id = None
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
+            
+            hire_date = staff.date_hired if staff.date_hired else date.today()
+            
             query = """
-            INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, staff_type)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-            cursor.execute(query, (staff.first_name, staff.middle_name, staff.last_name,
-                               staff.email, staff.salary, staff.age, staff.staff_type))
+            INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, staff_type, date_hired)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                staff.first_name, 
+                staff.middle_name, 
+                staff.last_name,
+                staff.email, 
+                staff.salary, 
+                staff.age, 
+                staff.staff_type,
+                hire_date
+            ))
             last_id = cursor.lastrowid
             conn.commit()
         except Exception as e:
             print(f"Error creating staff: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise  # Re-raise the exception so FastAPI can handle it
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
         return last_id
+
 
 class Coach:
     def __init__(self, staff_id, role, team_id=None):
@@ -136,15 +150,18 @@ class Coach:
             """
             cursor.execute(query, (coach.staff_id, coach.role, coach.team_id))
             conn.commit()
+            return coach.staff_id
         except Exception as e:
             print(f"Error creating coach: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
-        return coach.staff_id
+
 
 class Player:
     def __init__(self, first_name, middle_name, last_name, salary, positions, 
@@ -165,23 +182,34 @@ class Player:
     def create(player):
         conn = None
         cursor = None
+        last_id = None
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
             query = """
             INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
                                is_active, is_injured, transfer_value, contract_end_date, scouted_player)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query, (player.first_name, player.middle_name, player.last_name,
-                                player.salary, player.positions, player.is_active,
-                                player.is_injured, player.transfer_value, player.contract_end_date,
-                                player.scouted_player))
+            cursor.execute(query, (
+                player.first_name, 
+                player.middle_name, 
+                player.last_name,
+                player.salary, 
+                player.positions, 
+                player.is_active,
+                player.is_injured, 
+                player.transfer_value, 
+                player.contract_end_date,
+                player.scouted_player
+            ))
             last_id = cursor.lastrowid
             conn.commit()
         except Exception as e:
             print(f"Error creating player: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
@@ -191,35 +219,48 @@ class Player:
 
     @staticmethod
     def create_with_photo(player, photo_bytes: bytes, photo_content_type: str, photo_filename: str, photo_size: int):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
-                           is_active, is_injured, transfer_value, contract_end_date, scouted_player,
-                           photo, photo_content_type, photo_filename, photo_size)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (
-            player.first_name,
-            player.middle_name,
-            player.last_name,
-            player.salary,
-            player.positions,
-            player.is_active,
-            player.is_injured,
-            player.transfer_value,
-            player.contract_end_date,
-            player.scouted_player,
-            photo_bytes,
-            photo_content_type,
-            photo_filename,
-            photo_size,
-        ))
-        last_id = cursor.lastrowid
-        conn.commit()
-        cursor.close()
-        conn.close()
+        conn = None
+        cursor = None
+        last_id = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
+                               is_active, is_injured, transfer_value, contract_end_date, scouted_player,
+                               photo, photo_content_type, photo_filename, photo_size)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                player.first_name,
+                player.middle_name,
+                player.last_name,
+                player.salary,
+                player.positions,
+                player.is_active,
+                player.is_injured,
+                player.transfer_value,
+                player.contract_end_date,
+                player.scouted_player,
+                photo_bytes,
+                photo_content_type,
+                photo_filename,
+                photo_size,
+            ))
+            last_id = cursor.lastrowid
+            conn.commit()
+        except Exception as e:
+            print(f"Error creating player with photo: {e}")
+            if conn:
+                conn.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return last_id
+
 
 class Scout:
     def __init__(self, staff_id, region, YOE):
@@ -240,15 +281,17 @@ class Scout:
             """
             cursor.execute(query, (scout.staff_id, scout.region, scout.YOE))
             conn.commit()
+            return scout.staff_id
         except Exception as e:
             print(f"Error creating scout: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
-        return scout.staff_id
 
 
 class MedicalStaff:
@@ -269,18 +312,24 @@ class MedicalStaff:
             INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
             VALUES (%s, %s, %s, %s)
             """
-            cursor.execute(query, (medical_staff.staff_id, medical_staff.med_specialization, medical_staff.certification, medical_staff.YOE))
+            cursor.execute(query, (
+                medical_staff.staff_id, 
+                medical_staff.med_specialization, 
+                medical_staff.certification, 
+                medical_staff.YOE
+            ))
             conn.commit()
+            return medical_staff.staff_id
         except Exception as e:
             print(f"Error creating medical staff: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
-        return medical_staff.staff_id
-
 
 
 class MedicalReport:
@@ -295,6 +344,7 @@ class MedicalReport:
     def create(medical_report):
         conn = None
         cursor = None
+        last_id = None
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -302,14 +352,20 @@ class MedicalReport:
             INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
             VALUES (%s, %s, %s, %s, %s)
             """
-            cursor.execute(query, (medical_report.player_id, medical_report.summary,
-                                   medical_report.report_date, medical_report.treatment,
-                                   medical_report.severity_of_injury))
+            cursor.execute(query, (
+                medical_report.player_id, 
+                medical_report.summary,
+                medical_report.report_date, 
+                medical_report.treatment,
+                medical_report.severity_of_injury
+            ))
             last_id = cursor.lastrowid
             conn.commit()
         except Exception as e:
             print(f"Error creating medical report: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
@@ -323,6 +379,7 @@ class Formation:
     def create(f: FormationCreate) -> int:
         conn = None
         cursor = None
+        formation_id = None
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -337,7 +394,9 @@ class Formation:
             conn.commit()
         except Exception as e:
             print(f"Error creating formation: {e}")
-            conn.rollback()
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if cursor:
                 cursor.close()
@@ -345,26 +404,34 @@ class Formation:
                 conn.close()
         return formation_id
 
+
 class Lineup:
     @staticmethod
     def create_with_slots(lc: LineupCreate) -> int:
         conn = None
         cursor = None
+        lineup_id = None
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("""INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
-                           VALUES (%s,%s,%s,%s,%s)""",
-                           (lc.match_id, lc.team_id, lc.formation_id, lc.is_starting, lc.minute_applied))
+            cursor.execute("""
+                INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
+                VALUES (%s,%s,%s,%s,%s)
+            """, (lc.match_id, lc.team_id, lc.formation_id, lc.is_starting, lc.minute_applied))
             lineup_id = cursor.lastrowid
             for slot_no, player_id in lc.players.items():
-                cursor.execute("""INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)
-                               VALUES (%s, %s, %s)""", (lineup_id, slot_no, player_id))
+                cursor.execute("""
+                    INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)
+                    VALUES (%s, %s, %s)
+                """, (lineup_id, slot_no, player_id))
             conn.commit()
             return lineup_id
         except Exception as e:
-            conn.rollback()
-            raise e
+            if conn:
+                conn.rollback()
+            raise
         finally:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()

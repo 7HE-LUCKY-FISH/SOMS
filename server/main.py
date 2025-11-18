@@ -72,6 +72,31 @@ def create_staff_member(staff: StaffCreate):
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))
 
+@app.get("/staff/{staff_id}", response_model=Dict)
+def get_staff_by_id(staff_id: int):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT staff_id, first_name, middle_name, last_name, email, 
+                   salary, age, date_hired, staff_type 
+            FROM staff 
+            WHERE staff_id = %s
+        """, (staff_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Staff member not found")
+        
+        row = _serialize_row_dates(row)
+        return {"status": "success", "data": row}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @app.post("/login")
 def login(credentials: LoginRequest):
