@@ -118,6 +118,7 @@ class Staff:
                 staff.staff_type,
                 hire_date
             ))
+            conn.commit()
             last_id = cursor.lastrowid
         except Exception as e:
             print(f"Error creating staff: {e}")
@@ -128,7 +129,6 @@ class Staff:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
         return last_id
 
@@ -152,6 +152,7 @@ class Coach:
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (coach.staff_id, coach.role, coach.team_id))
+            conn.commit()
             return coach.staff_id
         except Exception as e:
             print(f"Error creating coach: {e}")
@@ -162,7 +163,6 @@ class Coach:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
 
 
@@ -208,6 +208,7 @@ class Player:
                 player.scouted_player
             ))
             last_id = cursor.lastrowid
+            conn.commit()
         except Exception as e:
             print(f"Error creating player: {e}")
             if conn:
@@ -217,7 +218,6 @@ class Player:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
         return last_id
 
@@ -253,6 +253,7 @@ class Player:
                 photo_size,
             ))
             last_id = cursor.lastrowid
+            conn.commit()
         except Exception as e:
             print(f"Error creating player with photo: {e}")
             if conn:
@@ -262,9 +263,8 @@ class Player:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
-        return last_id
+        return last_id  #should the  last row_ids be moved into the try block?
 
 
 class Scout:
@@ -286,6 +286,7 @@ class Scout:
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (scout.staff_id, scout.region, scout.YOE))
+            conn.commit()
             return scout.staff_id
         except Exception as e:
             print(f"Error creating scout: {e}")
@@ -296,7 +297,6 @@ class Scout:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
 
 
@@ -325,6 +325,7 @@ class MedicalStaff:
                 medical_staff.certification, 
                 medical_staff.YOE
             ))
+            conn.commit()
             return medical_staff.staff_id
         except Exception as e:
             print(f"Error creating medical staff: {e}")
@@ -335,7 +336,6 @@ class MedicalStaff:
             if cursor:
                 cursor.close()
             if conn:           
-                conn.commit()
                 conn.close()
 
 
@@ -368,6 +368,7 @@ class MedicalReport:
                 medical_report.severity_of_injury
             ))
             last_id = cursor.lastrowid
+            conn.commit()
         except Exception as e:
             print(f"Error creating medical report: {e}")
             if conn:
@@ -377,7 +378,6 @@ class MedicalReport:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
         return last_id
 
@@ -401,6 +401,7 @@ class Formation:
                         "INSERT INTO formation_role (formation_id, slot_no, label) VALUES (%s, %s, %s)",
                         (formation_id, slot_no, label)
                     )
+            conn.commit()
         except Exception as e:
             print(f"Error creating formation: {e}")
             if conn:
@@ -410,7 +411,6 @@ class Formation:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
         return formation_id
 
@@ -435,6 +435,7 @@ class Lineup:
                     INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)
                     VALUES (%s, %s, %s)
                 """, (lineup_id, slot_no, player_id))
+            conn.commit()
             return lineup_id
         except Exception as e:
             if conn:
@@ -444,5 +445,4 @@ class Lineup:
             if cursor:
                 cursor.close()
             if conn:
-                conn.commit()
                 conn.close()
