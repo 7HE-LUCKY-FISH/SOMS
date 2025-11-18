@@ -99,6 +99,7 @@ class Staff:
         last_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             
             hire_date = staff.date_hired if staff.date_hired else date.today()
@@ -118,7 +119,6 @@ class Staff:
                 hire_date
             ))
             last_id = cursor.lastrowid
-            conn.commit()
         except Exception as e:
             print(f"Error creating staff: {e}")
             if conn:
@@ -128,6 +128,7 @@ class Staff:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
         return last_id
 
@@ -144,13 +145,13 @@ class Coach:
         cursor = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO coach (staff_id, role, team_id)
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (coach.staff_id, coach.role, coach.team_id))
-            conn.commit()
             return coach.staff_id
         except Exception as e:
             print(f"Error creating coach: {e}")
@@ -161,6 +162,7 @@ class Coach:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
 
 
@@ -186,6 +188,7 @@ class Player:
         last_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
@@ -205,7 +208,6 @@ class Player:
                 player.scouted_player
             ))
             last_id = cursor.lastrowid
-            conn.commit()
         except Exception as e:
             print(f"Error creating player: {e}")
             if conn:
@@ -215,6 +217,7 @@ class Player:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
         return last_id
 
@@ -225,6 +228,7 @@ class Player:
         last_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO player (first_name, middle_name, last_name, salary, positions, 
@@ -249,7 +253,6 @@ class Player:
                 photo_size,
             ))
             last_id = cursor.lastrowid
-            conn.commit()
         except Exception as e:
             print(f"Error creating player with photo: {e}")
             if conn:
@@ -259,6 +262,7 @@ class Player:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
         return last_id
 
@@ -275,13 +279,13 @@ class Scout:
         cursor = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO scout (staff_id, region, YOE)
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (scout.staff_id, scout.region, scout.YOE))
-            conn.commit()
             return scout.staff_id
         except Exception as e:
             print(f"Error creating scout: {e}")
@@ -292,6 +296,7 @@ class Scout:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
 
 
@@ -308,6 +313,7 @@ class MedicalStaff:
         cursor = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
@@ -319,7 +325,6 @@ class MedicalStaff:
                 medical_staff.certification, 
                 medical_staff.YOE
             ))
-            conn.commit()
             return medical_staff.staff_id
         except Exception as e:
             print(f"Error creating medical staff: {e}")
@@ -329,7 +334,8 @@ class MedicalStaff:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if conn:           
+                conn.commit()
                 conn.close()
 
 
@@ -348,6 +354,7 @@ class MedicalReport:
         last_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             query = """
             INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
@@ -361,7 +368,6 @@ class MedicalReport:
                 medical_report.severity_of_injury
             ))
             last_id = cursor.lastrowid
-            conn.commit()
         except Exception as e:
             print(f"Error creating medical report: {e}")
             if conn:
@@ -371,6 +377,7 @@ class MedicalReport:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
         return last_id
 
@@ -383,7 +390,9 @@ class Formation:
         formation_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
+
             cursor.execute("INSERT INTO formation (code, name) VALUES (%s, %s)", (f.code, f.name))
             formation_id = cursor.lastrowid
             if f.roles:
@@ -392,7 +401,6 @@ class Formation:
                         "INSERT INTO formation_role (formation_id, slot_no, label) VALUES (%s, %s, %s)",
                         (formation_id, slot_no, label)
                     )
-            conn.commit()
         except Exception as e:
             print(f"Error creating formation: {e}")
             if conn:
@@ -402,6 +410,7 @@ class Formation:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()
         return formation_id
 
@@ -414,6 +423,7 @@ class Lineup:
         lineup_id = None
         try:
             conn = get_db_connection()
+            conn.start_transaction()
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
@@ -425,7 +435,6 @@ class Lineup:
                     INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)
                     VALUES (%s, %s, %s)
                 """, (lineup_id, slot_no, player_id))
-            conn.commit()
             return lineup_id
         except Exception as e:
             if conn:
@@ -435,4 +444,5 @@ class Lineup:
             if cursor:
                 cursor.close()
             if conn:
+                conn.commit()
                 conn.close()

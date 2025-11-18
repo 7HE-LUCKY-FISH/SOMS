@@ -839,6 +839,7 @@ def get_player_details(player_id: int):
 def create_match(match: MatchCreate):
     """Create a new match"""
     connection = get_db_connection()
+    connection.start_transaction()
     cursor = connection.cursor()
     try:
         query = """
@@ -854,7 +855,6 @@ def create_match(match: MatchCreate):
             match.result
         ))
         match_id = cursor.lastrowid
-        connection.commit()
         return {"status": "success", "match_id": match_id}
     except mysql.connector.IntegrityError as err:
         raise HTTPException(status_code=409, detail=str(err))
@@ -864,6 +864,7 @@ def create_match(match: MatchCreate):
         if cursor:
             cursor.close()
         if connection:
+            connection.commit()
             connection.close()
 
 
@@ -921,6 +922,30 @@ def get_all_matches():
             cursor.close()
         if connection:
             connection.close()
+
+@app.post("/player/injure/{player_id}", status_code=200)
+def set_player_as_injured(player_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE player SET is_injured = TRUE WHERE player_id = %s
+        """, (player_id,))
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    except Exception as e:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.commit()
+            connection.close()
+
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
