@@ -946,6 +946,222 @@ def set_player_as_injured(player_id: int):
             connection.close()
 
 
+# UPDATE endpoint for player injury status
+@app.post("/player/injure/{player_id}", status_code=200)
+def set_player_as_injured(player_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    connection.commit()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE player SET is_injured = TRUE WHERE player_id = %s
+        """, (player_id,))
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    except Exception as e:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.commit()
+            connection.close()
+    return {"status": "success", "message": "Player marked as injured"}
+
+
+# UPDATE endpoint to heal player
+@app.post("/player/heal/{player_id}", status_code=200)
+def set_player_as_healed(player_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE player SET is_injured = FALSE WHERE player_id = %s
+        """, (player_id,))
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    except Exception as e:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.commit()
+            connection.close()
+    return {"status": "success", "message": "Player marked as healed"}
+
+
+# UPDATE endpoint for match result
+@app.put("/match/{match_id}/result", status_code=200)
+def update_match_result(match_id: int, result: str = Form(...)):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE match_table SET result = %s WHERE match_id = %s
+        """, (result, match_id))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Match not found")
+            
+        connection.commit()
+        return {"status": "success", "message": "Match result updated"}
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# DELETE endpoint for match
+@app.delete("/match/{match_id}", status_code=200)
+def delete_match(match_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DELETE FROM match_table WHERE match_id = %s", (match_id,))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Match not found")
+            
+        connection.commit()
+        return {"status": "success", "message": "Match deleted"}
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# UPDATE endpoint for staff
+@app.put("/staff/{staff_id}", status_code=200)
+def update_staff(staff_id: int, staff: StaffCreate):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE staff 
+            SET first_name = %s, middle_name = %s, last_name = %s, 
+                email = %s, salary = %s, age = %s, staff_type = %s
+            WHERE staff_id = %s
+        """, (staff.first_name, staff.middle_name, staff.last_name,
+              staff.email, staff.salary, staff.age, staff.staff_type, staff_id))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Staff member not found")
+            
+        connection.commit()
+        return {"status": "success", "message": "Staff updated"}
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# UPDATE endpoint for player
+@app.put("/player/{player_id}", status_code=200)
+def update_player(player_id: int, player: PlayerCreate):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE player 
+            SET first_name = %s, middle_name = %s, last_name = %s, 
+                salary = %s, positions = %s, is_active = %s, is_injured = %s,
+                transfer_value = %s, contract_end_date = %s, scouted_player = %s
+            WHERE player_id = %s
+        """, (player.first_name, player.middle_name, player.last_name,
+              player.salary, player.positions, player.is_active, player.is_injured,
+              player.transfer_value, player.contract_end_date, player.scouted_player,
+              player_id))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Player not found")
+            
+        connection.commit()
+        return {"status": "success", "message": "Player updated"}
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# DELETE endpoint for player
+@app.delete("/player/{player_id}", status_code=200)
+def delete_player(player_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DELETE FROM player WHERE player_id = %s", (player_id,))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Player not found")
+            
+        connection.commit()
+        return {"status": "success", "message": "Player deleted"}
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# GET endpoint for single player (without detailed stats)
+@app.get("/player/{player_id}", response_model=Dict)
+def get_player_by_id(player_id: int):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT player_id, first_name, middle_name, last_name, salary, 
+                   positions, is_active, is_injured, transfer_value, 
+                   contract_end_date, scouted_player
+            FROM player
+            WHERE player_id = %s
+        """, (player_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Player not found")
+        
+        row = _serialize_row_dates(row)
+        return {"status": "success", "data": row}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
