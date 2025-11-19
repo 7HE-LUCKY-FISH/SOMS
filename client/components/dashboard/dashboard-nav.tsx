@@ -22,6 +22,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
     { href: '/squad/lineup', label: 'Lineup Builder', icon: Shield, roles: ['coach', 'admin'] },
     { href: '/squad/roster', label: 'Roster', icon: Users, roles: ['coach', 'medical', 'player', 'admin'] },
     { href: '/players', label: 'Players', icon: UserCircle, roles: ['coach', 'medical', 'player', 'admin'] },
+    { href: '/staff', label: 'Staff', icon: Users, roles: ['admin', 'coach', 'medical'] },
     { href: '/matches', label: 'Matches', icon: Calendar, roles: ['coach', 'medical', 'player', 'admin'] },
     { href: '/medical', label: 'Medical Center', icon: Activity, roles: ['coach', 'medical', 'admin'] },
     { href: '/admin', label: 'Admin', icon: Settings, roles: ['admin'] },
