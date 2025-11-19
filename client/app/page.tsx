@@ -34,20 +34,15 @@ export default function Home() {
       <section className="py-20 md:py-32 bg-gradient-to-b from-secondary/20 to-background">
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground text-balance">
-            Soccer Operations Made Simple
+            Soccer Operation Management System
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed text-balance max-w-2xl mx-auto">
-            Streamline your club management with intuitive lineup builders, medical tracking, and role-based access for coaches, medical staff, and players.
+            Streamline your club management with intuitive lineup builders, medical tracking, and statistics for coaches, medical staff, and players.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
                 Get Started Free
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button size="lg" variant="outline">
-                View Demo
               </Button>
             </Link>
           </div>
@@ -86,9 +81,9 @@ export default function Home() {
               <div className="size-12 rounded-xl bg-info/20 flex items-center justify-center mb-4">
                 <Users className="size-6 text-info-foreground" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Role-Based Access</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Multi-Team Support</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Tailored permissions for coaches, medical staff, players, and admins.
+                Manage multiple teams with separate rosters and permissions.
               </p>
             </div>
             <div className="bg-background p-6 rounded-2xl border border-border">
@@ -97,7 +92,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Analytics Dashboard</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Visualize player availability, minutes played, and injury trends.
+                View player availability, match history, and team wins.
               </p>
             </div>
           </div>
@@ -146,11 +141,11 @@ export default function Home() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent-foreground mt-1">•</span>
-                  <span>Return-to-play timeline management</span>
+                  <span>Medical notes</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent-foreground mt-1">•</span>
-                  <span>Medical notes and availability updates</span>
+                  <span>Availability updates</span>
                 </li>
               </ul>
             </div>
@@ -177,7 +172,7 @@ export default function Home() {
             <div className="bg-card p-8 rounded-2xl border border-border">
               <h3 className="text-2xl font-semibold mb-3 text-foreground">Admin</h3>
               <p className="text-muted-foreground mb-4 leading-relaxed">
-                Manage users, configure settings, and oversee all operations.
+                Manage users, configure settings, and oversee operations.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -198,21 +193,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-b from-primary/5 to-background">
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Ready to streamline your operations?</h2>
-          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            Join clubs already using SOMS to manage their teams more effectively.
-          </p>
-          <Link href="/auth/signup">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Start Free Trial
-            </Button>
-          </Link>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-border bg-card py-12">
         <div className="container mx-auto px-4">
@@ -224,7 +204,7 @@ export default function Home() {
               <span className="font-semibold text-lg text-foreground">SOMS</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Soccer Operations Management System. All rights reserved.
+              2025 Soccer Operations Management System
             </p>
           </div>
         </div>
