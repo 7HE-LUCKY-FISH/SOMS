@@ -48,7 +48,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
         setMatches(response.data)
       }
     } catch (err) {
-      console.error('[v0] Error fetching matches:', err)
+      console.error('[matches-view] Error fetching matches:', err)
       setError('Failed to load matches')
     } finally {
       setIsLoading(false)
@@ -104,7 +104,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
         <Card className="p-12">
           <div className="text-center">
             <p className="text-destructive">{error}</p>
-            <Button onClick={() => window.location.reload()} className="mt-4">
+            <Button onClick={fetchMatches} className="mt-4">
               Retry
             </Button>
           </div>

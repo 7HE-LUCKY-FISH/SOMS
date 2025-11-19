@@ -1,24 +1,79 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ArrowLeft, MapPin, Calendar } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, Loader2 } from 'lucide-react'
+
+interface Match {
+  match_id: number
+  name: string
+  venue: string
+  match_time: string
+  opponent_team: string
+  match_date: string
+  result?: string
+}
 
 interface MatchDetailsProps {
   matchId: string
 }
 
 export function MatchDetails({ matchId }: MatchDetailsProps) {
-  // Mock match data
-  const match = {
-    id: matchId,
-    opponent: 'City FC',
-    competition: 'League',
-    venue: 'Home',
-    date: '2025-11-16',
-    time: '15:00',
-    status: 'upcoming' as const,
+  const [match, setMatch] = useState<Match | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchMatch()
+  }, [matchId])
+
+  async function fetchMatch() {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`http://localhost:8000/match/${matchId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch match')
+      }
+      const data = await response.json()
+      if (data.data) {
+        setMatch(data.data)
+      }
+    } catch (err) {
+      console.error('[match-details] Error fetching match:', err)
+      setError('Failed to load match details')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="size-5 animate-spin" />
+            <span className="text-muted-foreground">Loading match details...</span>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error || !match) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="text-center">
+            <p className="text-destructive">{error || 'Match not found'}</p>
+            <Link href="/matches">
+              <Button className="mt-4">Back to Matches</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -30,8 +85,8 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">vs {match.opponent}</h1>
-          <p className="text-muted-foreground">{match.competition}</p>
+          <h1 className="text-3xl font-bold text-foreground">vs {match.opponent_team}</h1>
+          <p className="text-muted-foreground">{match.name}</p>
         </div>
       </div>
 
@@ -43,7 +98,7 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
             <div className="flex items-center gap-2">
               <Calendar className="size-4 text-muted-foreground" />
               <p className="font-medium text-foreground">
-                {new Date(match.date).toLocaleDateString('en-US', {
+                {new Date(match.match_date).toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',
@@ -54,7 +109,7 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Kickoff</p>
-            <p className="font-medium text-foreground">{match.time}</p>
+            <p className="font-medium text-foreground">{match.match_time}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Venue</p>
@@ -64,8 +119,8 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
             </div>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Competition</p>
-            <p className="font-medium text-foreground">{match.competition}</p>
+            <p className="text-sm text-muted-foreground mb-1">Result</p>
+            <p className="font-medium text-foreground">{match.result || 'TBD'}</p>
           </div>
         </div>
       </Card>

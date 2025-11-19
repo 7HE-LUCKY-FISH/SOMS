@@ -1,12 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
+
+interface PlayerStats {
+  pms_id: number
+  player_id: number
+  match_id: number
+  match_name: string
+  match_date: string
+  match_time: string
+  team_id: number
+  team_name: string
+  started: boolean
+  tackles: number
+  minutes: number
+  shots_total: number
+  offsides: number
+  red_cards: number
+  yellow_cards: number
+  fouls_committed: number
+  dribbles_attempted: number
+  assists: number
+  goals: number
+  passing_accuracy: number
+}
+
+interface MedicalReport {
+  med_report_id: number
+  summary: string
+  report_date: string
+  treatment: string
+  severity_of_injury: string
+}
+
+interface Player {
+  player_id: number
+  first_name: string
+  middle_name?: string
+  last_name: string
+  positions?: string
+  is_active: boolean
+  is_injured: boolean
+  salary: number
+  transfer_value?: number
+  contract_end_date?: string
+  scouted_player: boolean
+  medical_reports: MedicalReport[]
+  match_stats: PlayerStats[]
+}
 
 interface PlayerProfileProps {
   playerId: string
@@ -14,41 +61,76 @@ interface PlayerProfileProps {
 }
 
 export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
+  const [player, setPlayer] = useState<Player | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   const canAddNotes = userRole === 'coach' || userRole === 'medical' || userRole === 'admin'
 
-  // Mock player data
-  const player = {
-    id: playerId,
-    name: 'Lucas Garcia',
-    number: 9,
-    position: 'ST',
-    team: 'First Team',
-    availability: 'available',
-    nationality: 'Argentina',
-    age: 24,
-    height: '183 cm',
-    weight: '78 kg',
-    preferredFoot: 'Right',
+  useEffect(() => {
+    fetchPlayer()
+  }, [playerId])
+
+  async function fetchPlayer() {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`http://localhost:8000/player_details/${playerId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch player')
+      }
+      const data = await response.json()
+      if (data.data) {
+        setPlayer(data.data)
+      }
+    } catch (err) {
+      console.error('[player-profile] Error fetching player:', err)
+      setError('Failed to load player details')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const stats = {
-    appearances: 12,
-    goals: 8,
-    assists: 3,
-    minutesPlayed: 1048,
-    rating: 7.4,
+  if (isLoading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="size-5 animate-spin" />
+            <span className="text-muted-foreground">Loading player details...</span>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
-  const matchLogs = [
-    { date: 'Nov 10, 2025', opponent: 'United FC', minutes: 90, rating: 7.5, goals: 1, assists: 0 },
-    { date: 'Nov 3, 2025', opponent: 'Rangers SC', minutes: 82, rating: 7.0, goals: 0, assists: 1 },
-    { date: 'Oct 27, 2025', opponent: 'Athletic Club', minutes: 90, rating: 7.8, goals: 2, assists: 0 },
-    { date: 'Oct 20, 2025', opponent: 'City FC', minutes: 65, rating: 7.2, goals: 1, assists: 1 },
-  ]
+  if (error || !player) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Card className="p-12">
+          <div className="text-center">
+            <p className="text-destructive">{error || 'Player not found'}</p>
+            <Link href="/players">
+              <Button className="mt-4">Back to Players</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  const fullName = `${player.first_name} ${player.middle_name ? player.middle_name + ' ' : ''}${player.last_name}`
+
+  // Calculate stats
+  const totalAppearances = player.match_stats?.length || 0
+  const totalGoals = player.match_stats?.reduce((sum, s) => sum + (s.goals || 0), 0) || 0
+  const totalAssists = player.match_stats?.reduce((sum, s) => sum + (s.assists || 0), 0) || 0
+  const totalMinutes = player.match_stats?.reduce((sum, s) => sum + (s.minutes || 0), 0) || 0
+  const avgRating = totalAppearances > 0 ? 
+    (player.match_stats.reduce((sum, s) => sum + (s.passing_accuracy || 0), 0) / totalAppearances).toFixed(1) : 
+    'N/A'
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/players">
           <Button variant="outline" size="icon">
@@ -56,8 +138,8 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">{player.name}</h1>
-          <p className="text-muted-foreground">{player.position} • #{player.number}</p>
+          <h1 className="text-3xl font-bold text-foreground">{fullName}</h1>
+          <p className="text-muted-foreground">{player.positions || 'Position not set'}</p>
         </div>
         {canAddNotes && (
           <Button>Add Note</Button>
@@ -74,60 +156,64 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Bio Card */}
           <Card className="p-6">
             <h3 className="font-semibold text-foreground mb-4">Player Information</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Age</p>
-                <p className="font-medium text-foreground">{player.age} years</p>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="font-medium text-foreground">
+                  {player.is_injured ? 'Injured' : player.is_active ? 'Active' : 'Inactive'}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Nationality</p>
-                <p className="font-medium text-foreground">{player.nationality}</p>
+                <p className="text-sm text-muted-foreground">Salary</p>
+                <p className="font-medium text-foreground">${player.salary?.toLocaleString() || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Height</p>
-                <p className="font-medium text-foreground">{player.height}</p>
+                <p className="text-sm text-muted-foreground">Transfer Value</p>
+                <p className="font-medium text-foreground">
+                  ${player.transfer_value?.toLocaleString() || 'N/A'}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Weight</p>
-                <p className="font-medium text-foreground">{player.weight}</p>
+                <p className="text-sm text-muted-foreground">Contract End</p>
+                <p className="font-medium text-foreground">
+                  {player.contract_end_date ? 
+                    new Date(player.contract_end_date).toLocaleDateString() : 
+                    'N/A'}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Preferred Foot</p>
-                <p className="font-medium text-foreground">{player.preferredFoot}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Team</p>
-                <p className="font-medium text-foreground">{player.team}</p>
+                <p className="text-sm text-muted-foreground">Source</p>
+                <p className="font-medium text-foreground">
+                  {player.scouted_player ? 'Scouted' : 'Direct'}
+                </p>
               </div>
             </div>
           </Card>
 
-          {/* Season Stats */}
           <Card className="p-6">
             <h3 className="font-semibold text-foreground mb-4">Season Statistics</h3>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-primary">{stats.appearances}</p>
+                <p className="text-3xl font-bold text-primary">{totalAppearances}</p>
                 <p className="text-sm text-muted-foreground mt-1">Appearances</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-accent-foreground">{stats.goals}</p>
+                <p className="text-3xl font-bold text-accent-foreground">{totalGoals}</p>
                 <p className="text-sm text-muted-foreground mt-1">Goals</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-info-foreground">{stats.assists}</p>
+                <p className="text-3xl font-bold text-info-foreground">{totalAssists}</p>
                 <p className="text-sm text-muted-foreground mt-1">Assists</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-warning-foreground">{stats.minutesPlayed}</p>
+                <p className="text-3xl font-bold text-warning-foreground">{totalMinutes}</p>
                 <p className="text-sm text-muted-foreground mt-1">Minutes</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-foreground">{stats.rating}</p>
-                <p className="text-sm text-muted-foreground mt-1">Avg Rating</p>
+                <p className="text-3xl font-bold text-foreground">{avgRating}</p>
+                <p className="text-sm text-muted-foreground mt-1">Avg Pass %</p>
               </div>
             </div>
           </Card>
@@ -136,60 +222,82 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
         <TabsContent value="matches">
           <Card className="p-6">
             <h3 className="font-semibold text-foreground mb-4">Match History</h3>
-            <div className="space-y-4">
-              {matchLogs.map((match, index) => (
-                <div key={index} className="p-4 bg-muted/50 rounded-xl">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex-1 min-w-48">
-                      <p className="font-medium text-foreground">{match.opponent}</p>
-                      <p className="text-sm text-muted-foreground">{match.date}</p>
-                    </div>
-                    <div className="flex gap-6 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Minutes</p>
-                        <p className="font-semibold text-foreground">{match.minutes}'</p>
+            {!player.match_stats || player.match_stats.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No match history available</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {player.match_stats.map((match) => (
+                  <div key={match.pms_id} className="p-4 bg-muted/50 rounded-xl">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex-1 min-w-48">
+                        <p className="font-medium text-foreground">{match.match_name || 'Match'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {match.match_date ? new Date(match.match_date).toLocaleDateString() : 'N/A'}
+                        </p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Rating</p>
-                        <p className="font-semibold text-foreground">{match.rating}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Goals</p>
-                        <p className="font-semibold text-foreground">{match.goals}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Assists</p>
-                        <p className="font-semibold text-foreground">{match.assists}</p>
+                      <div className="flex gap-6 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Minutes</p>
+                          <p className="font-semibold text-foreground">{match.minutes}'</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Goals</p>
+                          <p className="font-semibold text-foreground">{match.goals || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Assists</p>
+                          <p className="font-semibold text-foreground">{match.assists || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Pass %</p>
+                          <p className="font-semibold text-foreground">{match.passing_accuracy || 0}%</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
         </TabsContent>
 
         <TabsContent value="stats">
           <Card className="p-6">
             <h3 className="font-semibold text-foreground mb-4">Detailed Statistics</h3>
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Goals per 90</p>
-                <p className="text-2xl font-bold text-foreground">0.69</p>
+            {!player.match_stats || player.match_stats.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No statistics available</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Assists per 90</p>
-                <p className="text-2xl font-bold text-foreground">0.26</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Goals per 90</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalMinutes > 0 ? ((totalGoals / totalMinutes) * 90).toFixed(2) : '0.00'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Assists per 90</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalMinutes > 0 ? ((totalAssists / totalMinutes) * 90).toFixed(2) : '0.00'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Total Shots</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {player.match_stats.reduce((sum, s) => sum + (s.shots_total || 0), 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Total Tackles</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {player.match_stats.reduce((sum, s) => sum + (s.tackles || 0), 0)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Shots per 90</p>
-                <p className="text-2xl font-bold text-foreground">3.8</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Shot Accuracy</p>
-                <p className="text-2xl font-bold text-foreground">62%</p>
-              </div>
-            </div>
+            )}
           </Card>
         </TabsContent>
 
@@ -197,13 +305,51 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
           <Card className="p-6">
             <h3 className="font-semibold text-foreground mb-4">Medical Summary</h3>
             <div className="space-y-4">
-              <div className="p-4 bg-accent/10 border border-accent/30 rounded-xl">
-                <p className="font-medium text-accent-foreground">Current Status: Available</p>
-                <p className="text-sm text-muted-foreground mt-1">No active injuries or concerns</p>
+              <div className={`p-4 border rounded-xl ${
+                player.is_injured 
+                  ? 'bg-destructive/10 border-destructive/30' 
+                  : 'bg-accent/10 border-accent/30'
+              }`}>
+                <p className={`font-medium ${
+                  player.is_injured ? 'text-destructive' : 'text-accent-foreground'
+                }`}>
+                  Current Status: {player.is_injured ? 'Injured' : 'Available'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {player.is_injured ? 'Player is currently recovering from injury' : 'No active injuries or concerns'}
+                </p>
               </div>
+              
               <div>
-                <h4 className="font-medium text-foreground mb-2">Injury History</h4>
-                <p className="text-sm text-muted-foreground">No injuries recorded this season</p>
+                <h4 className="font-medium text-foreground mb-2">Medical Reports</h4>
+                {!player.medical_reports || player.medical_reports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No medical reports on record</p>
+                ) : (
+                  <div className="space-y-2">
+                    {player.medical_reports.map((report) => (
+                      <div key={report.med_report_id} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex justify-between items-start mb-1">
+                          <p className="font-medium text-sm text-foreground">
+                            {new Date(report.report_date).toLocaleDateString()}
+                          </p>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            report.severity_of_injury === 'High' ? 'bg-destructive/10 text-destructive' :
+                            report.severity_of_injury === 'Medium' ? 'bg-warning/10 text-warning-foreground' :
+                            'bg-accent/10 text-accent-foreground'
+                          }`}>
+                            {report.severity_of_injury || 'N/A'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{report.summary}</p>
+                        {report.treatment && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Treatment: {report.treatment}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </Card>

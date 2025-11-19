@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Search, Loader2, Plus } from 'lucide-react'
-import { apiGetAllPlayers, apiCreatePlayer } from '@/lib/api'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card } from '@/components/ui/card'
+import { Search, UserCircle2, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
 
 interface Player {
@@ -19,6 +17,10 @@ interface Player {
   positions?: string
   is_active: boolean
   is_injured: boolean
+  salary: number
+  transfer_value?: number
+  contract_end_date?: string
+  scouted_player: boolean
 }
 
 interface PlayerGridProps {
@@ -28,12 +30,10 @@ interface PlayerGridProps {
 export function PlayerGrid({ userRole }: PlayerGridProps) {
   const [players, setPlayers] = useState<Player[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  
-  const canCreate = userRole === 'admin'
+  const [positionFilter, setPositionFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     fetchPlayers()
@@ -42,69 +42,33 @@ export function PlayerGrid({ userRole }: PlayerGridProps) {
   async function fetchPlayers() {
     try {
       setIsLoading(true)
-      const response = await apiGetAllPlayers()
-      if (response.data) {
-        setPlayers(response.data)
+      const response = await fetch('http://localhost:8000/players')
+      if (!response.ok) {
+        throw new Error('Failed to fetch players')
+      }
+      const data = await response.json()
+      if (data.data) {
+        setPlayers(data.data)
       }
     } catch (err) {
-      console.error('[v0] Error fetching players:', err)
+      console.error('[player-grid] Error fetching players:', err)
+      setError('Failed to load players')
     } finally {
       setIsLoading(false)
     }
   }
 
-  async function handleCreatePlayer(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setIsCreating(true)
-    setCreateError(null)
-
-    const formData = new FormData(e.currentTarget)
-    const data = {
-      first_name: formData.get('first_name') as string,
-      middle_name: formData.get('middle_name') as string || undefined,
-      last_name: formData.get('last_name') as string,
-      salary: parseFloat(formData.get('salary') as string),
-      positions: formData.get('positions') as string || undefined,
-      is_active: true,
-      is_injured: false,
-      transfer_value: parseFloat(formData.get('transfer_value') as string) || undefined,
-      contract_end_date: formData.get('contract_end_date') as string || undefined,
-      scouted_player: false,
-    }
-
-    try {
-      await apiCreatePlayer(data)
-      setIsCreateOpen(false)
-      fetchPlayers()
-      e.currentTarget.reset()
-    } catch (err: any) {
-      setCreateError(err.message || 'Failed to create player')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  const filteredPlayers = players.filter(player => {
-    const fullName = `${player.first_name} ${player.middle_name || ''} ${player.last_name}`.toLowerCase()
-    return fullName.includes(searchQuery.toLowerCase()) ||
-           (player.positions?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+  const filtered = players.filter((p) => {
+    const fullName = `${p.first_name} ${p.middle_name || ''} ${p.last_name}`.toLowerCase()
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase())
+    const matchesPosition = positionFilter === 'all' || (p.positions && p.positions.includes(positionFilter))
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      (statusFilter === 'active' && p.is_active && !p.is_injured) ||
+      (statusFilter === 'injured' && p.is_injured) ||
+      (statusFilter === 'inactive' && !p.is_active)
+    return matchesSearch && matchesPosition && matchesStatus
   })
-
-  const getAvailabilityColor = (player: Player) => {
-    if (player.is_injured) {
-      return 'border-destructive/30'
-    } else if (player.is_active) {
-      return 'border-accent/30'
-    } else {
-      return 'border-warning/30'
-    }
-  }
-
-  const getAvailabilityText = (player: Player) => {
-    if (player.is_injured) return 'out'
-    if (player.is_active) return 'available'
-    return 'inactive'
-  }
 
   if (isLoading) {
     return (
@@ -117,107 +81,103 @@ export function PlayerGrid({ userRole }: PlayerGridProps) {
     )
   }
 
+  if (error) {
+    return (
+      <Card className="p-12">
+        <div className="text-center">
+          <p className="text-destructive">{error}</p>
+          <Button onClick={fetchPlayers} className="mt-4">Retry</Button>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search players..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+      <Card className="p-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search players..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Select value={positionFilter} onValueChange={setPositionFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Positions</SelectItem>
+                <SelectItem value="GK">Goalkeeper</SelectItem>
+                <SelectItem value="DF">Defender</SelectItem>
+                <SelectItem value="MF">Midfielder</SelectItem>
+                <SelectItem value="FW">Forward</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Available</SelectItem>
+                <SelectItem value="injured">Injured</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        
-        {canCreate && (
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="size-4 mr-2" />
-                Create Player
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Player</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreatePlayer} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="first_name">First Name *</Label>
-                    <Input id="first_name" name="first_name" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="middle_name">Middle Name</Label>
-                    <Input id="middle_name" name="middle_name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="last_name">Last Name *</Label>
-                    <Input id="last_name" name="last_name" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="positions">Position(s)</Label>
-                    <Input id="positions" name="positions" placeholder="e.g., ST, CF" />
-                  </div>
-                  <div>
-                    <Label htmlFor="salary">Salary *</Label>
-                    <Input id="salary" name="salary" type="number" step="0.01" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="transfer_value">Transfer Value</Label>
-                    <Input id="transfer_value" name="transfer_value" type="number" step="0.01" />
-                  </div>
-                  <div>
-                    <Label htmlFor="contract_end_date">Contract End Date</Label>
-                    <Input id="contract_end_date" name="contract_end_date" type="date" />
-                  </div>
-                </div>
-                
-                {createError && (
-                  <p className="text-sm text-destructive">{createError}</p>
-                )}
-                
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isCreating}>
-                    {isCreating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-                    Create Player
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+      </Card>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredPlayers.map((player) => (
-          <Link key={player.player_id} href={`/players/${player.player_id}`}>
-            <Card className={`p-6 hover:border-primary transition-all cursor-pointer border-2 ${getAvailabilityColor(player)}`}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="size-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">{player.player_id}</span>
-                </div>
-                <span className="px-2 py-1 rounded-md text-xs font-medium bg-secondary text-secondary-foreground">
-                  {player.positions || 'N/A'}
-                </span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-1">
-                {player.first_name} {player.middle_name ? player.middle_name + ' ' : ''}{player.last_name}
-              </h3>
-              <p className="text-sm text-muted-foreground capitalize">{getAvailabilityText(player)}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {filteredPlayers.length === 0 && (
+      {filtered.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-muted-foreground">No players found.</p>
+          <p className="text-muted-foreground">No players found matching your filters.</p>
         </Card>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filtered.map((player) => (
+            <Link key={player.player_id} href={`/players/${player.player_id}`}>
+              <Card className="p-6 hover:border-primary transition-colors cursor-pointer">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCircle2 className="size-12 text-primary" />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">
+                      {player.first_name} {player.last_name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{player.positions || 'N/A'}</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {player.is_injured && (
+                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-destructive/10 text-destructive">
+                        Injured
+                      </span>
+                    )}
+                    {!player.is_active && (
+                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-muted text-muted-foreground">
+                        Inactive
+                      </span>
+                    )}
+                    {player.is_active && !player.is_injured && (
+                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-accent/20 text-accent-foreground">
+                        Available
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   )

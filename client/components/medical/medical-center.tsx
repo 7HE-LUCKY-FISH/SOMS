@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Search, AlertTriangle, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
-import { apiGetMedicalReports, apiGetAllPlayers, apiCreateMedicalReport } from '@/lib/api'
+import { apiGetAllMedicalReports, apiGetAllPlayers, apiCreateMedicalReport } from '@/lib/api'
 
 interface MedicalCenterProps {
   userRole: UserRole
@@ -36,7 +36,7 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
     try {
       setIsLoading(true)
       const [reportsRes, playersRes] = await Promise.all([
-        apiGetMedicalReports(),
+        apiGetAllMedicalReports(),
         apiGetAllPlayers()
       ])
       if (reportsRes.data) setReports(reportsRes.data)
