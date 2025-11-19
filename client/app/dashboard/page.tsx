@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     <>
       {user.role === 'coach' && <CoachDashboard user={user} />}
       {user.role === 'medical' && <MedicalDashboard user={user} />}
-      {user.role === 'player' && <PlayerDashboard user={user} />}
+      {user.role === 'scout' && <PlayerDashboard user={user} />}
       {user.role === 'admin' && <AdminDashboard user={user} />}
     </>
   )
