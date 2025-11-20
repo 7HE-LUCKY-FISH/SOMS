@@ -34,8 +34,9 @@ export async function login(
     const result = await apiLogin(username, password)
     
     if (result.status === 'success' && result.staff_id) {
+      const staffId = result.staff_id 
       // Fetch full staff details from backend
-      const staffDetails = await fetch(`http://localhost:8000/staff/${result.staff_id}`)
+      const staffDetails = await fetch(`http://localhost:8000/staff/${staffId}`)
       const staffData = await staffDetails.json()
       
       if (!staffData.data) {
@@ -44,11 +45,11 @@ export async function login(
 
       const staff = staffData.data
       const user: User = {
-        id: String(result.staff_id),
+        id: String(staffId),
         email: staff.email,
         name: `${staff.first_name} ${staff.last_name}`,
         role: mapStaffTypeToRole(staff.staff_type),
-        staff_id: result.staff_id,
+        staff_id: staffId,
         staff_type: staff.staff_type
       }
 
@@ -78,7 +79,7 @@ export async function signup(
 ): Promise<{ success: boolean; error?: string; user?: User }> {
   try {
     // Map frontend role back to backend staff_type
-    const roleToStaffType: Record<UserRole, string> = {
+    const roleToStaffType: Record<Exclude<UserRole, 'player'>, string> = {
       'coach': 'Coach',
       'medical': 'Med',
       'scout': 'Scout',

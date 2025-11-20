@@ -265,7 +265,7 @@ export async function apiCreateLineup(data: any) {
 // AUTH ENDPOINTS
 // ============================================================================
 
-export async function apiLogin(username: string, password: string) {
+export async function apiLogin(username: string, password: string): Promise<{ status: string; staff_id?: number }> {
   return apiFetch('/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
