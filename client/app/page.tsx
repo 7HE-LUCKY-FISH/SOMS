@@ -114,16 +114,16 @@ export default function Home() {
                 Create lineups, manage rosters, track matches, and add training notes.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-primary">•</span>
                   <span>Full lineup creation and editing</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-primary">•</span>
                   <span>Roster management and team assignments</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-primary">•</span>
                   <span>Match creation and event tracking</span>
                 </li>
               </ul>
@@ -134,16 +134,16 @@ export default function Home() {
                 Log injuries, set recovery timelines, and manage player availability.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-accent-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent-foreground">•</span>
                   <span>Injury logging and tracking</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent-foreground">•</span>
                   <span>Medical notes</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent-foreground">•</span>
                   <span>Availability updates</span>
                 </li>
               </ul>
@@ -154,16 +154,16 @@ export default function Home() {
                 View your stats, upcoming matches, and personal medical information.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-info-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-info-foreground">•</span>
                   <span>Personal stats and match history</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-info-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-info-foreground">•</span>
                   <span>Team schedule and lineup visibility</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-info-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-info-foreground">•</span>
                   <span>Medical status overview</span>
                 </li>
               </ul>
@@ -174,16 +174,16 @@ export default function Home() {
                 Manage users, configure settings, and oversee operations.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-warning-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-warning-foreground">•</span>
                   <span>User management and role assignment</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-warning-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-warning-foreground">•</span>
                   <span>Organization and season settings</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-warning-foreground mt-1">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-warning-foreground">•</span>
                   <span>Data import and system configuration</span>
                 </li>
               </ul>
