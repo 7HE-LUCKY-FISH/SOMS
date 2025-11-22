@@ -14,7 +14,7 @@ export function PlayerList({ players, onDragStart }: PlayerListProps) {
         return 'bg-accent/20 text-accent-foreground border-accent/30'
       case 'doubtful':
         return 'bg-warning/20 text-warning-foreground border-warning/30'
-      case 'out':
+      case 'injured':
         return 'bg-destructive/20 text-destructive border-destructive/30'
     }
   }

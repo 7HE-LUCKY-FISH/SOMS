@@ -6,13 +6,10 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-primary flex items-center justify-center">
-              <Shield className="size-5 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-xl text-foreground">SOMS</span>
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 h-25">
+        <div className="container mx-auto px-4 h-full flex items-center justify-between">
+          <div className="flex items-center gap-2 h-full">
+            <img src="/SOMS-Logo3.svg" alt="SOMS Logo" className="h-full" />
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
@@ -33,9 +30,11 @@ export default function Home() {
       {/* Hero Section */}
       <section className="py-20 md:py-32 bg-gradient-to-b from-secondary/20 to-background">
         <div className="container mx-auto px-4 text-center max-w-4xl">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground text-balance">
-            Soccer Operation Management System
-          </h1>
+          <div className="flex flex-col items-center mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground text-balance">
+              Soccer Operation Management System
+            </h1>
+          </div>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed text-balance max-w-2xl mx-auto">
             Streamline your club management with intuitive lineup builders, medical tracking, and statistics for coaches, medical staff, and players.
           </p>
@@ -194,14 +193,11 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="size-5 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg text-foreground">SOMS</span>
+      <footer className="border-t border-border bg-card h-16">
+        <div className="container mx-auto px-4 h-full">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-2 h-full">
+              <img src="/SOMS-Logo.png" alt="SOMS Logo" className="h-full" />
             </div>
             <p className="text-sm text-muted-foreground">
               2025 Soccer Operations Management System

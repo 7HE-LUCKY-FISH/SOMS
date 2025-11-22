@@ -222,7 +222,13 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Time:</span>
-                        <span className="text-foreground">{match.match_time}</span>
+                        <span className="text-foreground">
+                          {new Date(`1970-01-01T${match.match_time}`).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit', 
+                            hour12: true 
+                          })}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 rounded-md text-xs font-medium ${

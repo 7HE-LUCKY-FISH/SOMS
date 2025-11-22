@@ -1,6 +1,5 @@
 import { LoginForm } from '@/components/auth/login-form'
 import Link from 'next/link'
-import { Shield } from 'lucide-react'
 
 export default function LoginPage() {
   return (
@@ -8,10 +7,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
-              <Shield className="size-6 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-2xl text-foreground">SOMS</span>
+            <img src="/SOMS-Logo3.svg" alt="SOMS Logo" className="size-40" />
           </Link>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
           <p className="text-muted-foreground">Sign in to your account to continue</p>

@@ -109,7 +109,13 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Kickoff</p>
-            <p className="font-medium text-foreground">{match.match_time}</p>
+            <p className="font-medium text-foreground">
+              {new Date(`1970-01-01T${match.match_time}`).toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+              })}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Venue</p>

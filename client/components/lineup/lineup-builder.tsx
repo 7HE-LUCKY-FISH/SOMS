@@ -18,8 +18,19 @@ export interface Player {
   id: string
   name: string
   position: string
-  availability: 'available' | 'doubtful' | 'out'
+  availability: 'available' | 'doubtful' | 'injured'
   number: number
+}
+
+// fix implicity issue on any type line 115 p
+interface ApiPlayer {
+  player_id: number
+  first_name: string
+  middle_name?: string
+  last_name: string
+  positions?: string
+  is_active: boolean
+  is_injured: boolean
 }
 
 export interface PitchSlot {
@@ -102,11 +113,11 @@ export function LineupBuilder({ user }: { user: User }) {
         setIsLoading(true)
         const response = await apiGetAllPlayers()
         if (response.data) {
-          const transformedPlayers: Player[] = response.data.map(p => ({
+          const transformedPlayers: Player[] = response.data.map((p: ApiPlayer) => ({
             id: String(p.player_id),
             name: `${p.first_name} ${p.middle_name ? p.middle_name + ' ' : ''}${p.last_name}`,
             position: p.positions || 'N/A',
-            availability: p.is_injured ? 'out' : (p.is_active ? 'available' : 'doubtful'),
+            availability: p.is_injured ? 'injured' : (p.is_active ? 'available' : 'doubtful'),
             number: p.player_id
           }))
           setPlayers(transformedPlayers)
