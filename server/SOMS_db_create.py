@@ -115,12 +115,15 @@ create table if not exists player
     transfer_value DECIMAL(10,2),
     contract_end_date DATE NOT NULL,
     scouted_player BOOLEAN DEFAULT FALSE,
+    team_id INT NULL,
     -- profile photo stored in the DB (LONGBLOB): binary, content type, filename, size and timestamp
     photo LONGBLOB,
     photo_content_type VARCHAR(100),
     photo_filename VARCHAR(255),
     photo_size BIGINT,
-    photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_player_team FOREIGN KEY (team_id) REFERENCES team(team_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_player_team (team_id)
 );
 """)
 #scouted_player indicates if the player is being scouted and not on team

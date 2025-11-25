@@ -29,6 +29,8 @@ from models import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 import base64
+import mimetypes
+import os
 
 load_dotenv()
 
@@ -366,11 +368,32 @@ async def create_player_with_photo(
     filename = None
     size = None
     if file is not None:
+        # Security validation
+        allowed_mime_types = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+        allowed_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+        max_size = 2_294_967_294  # 2GB
+
+        # Check MIME type
+        if file.content_type not in allowed_mime_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only image files are allowed.")
+
+        # Check file extension
+        if file.filename:
+            _, ext = os.path.splitext(file.filename.lower())
+            if ext not in allowed_extensions:
+                raise HTTPException(status_code=400, detail="Invalid file extension. Allowed: png, jpg, jpeg, gif, webp")
+
         try:
             photo_bytes = await file.read()
+            size = len(photo_bytes)
+
+            # Check file size
+            if size > max_size:
+                raise HTTPException(status_code=400, detail="File too large. Maximum size is 4GB.")
+
             content_type = file.content_type
             filename = file.filename
-            size = len(photo_bytes)
+
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error reading uploaded file: {e}")
 
