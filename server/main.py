@@ -1,7 +1,11 @@
 import mysql.connector
+import base64
+import logging
+import os
+import mimetypes
 from datetime import date, datetime, time as dtime
 import uvicorn
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, Optional
@@ -28,9 +32,7 @@ from models import (
     MatchCreate
 )
 from werkzeug.security import check_password_hash, generate_password_hash
-import base64
-import mimetypes
-import os
+from starlette.responses import JSONResponse
 
 load_dotenv()
 
@@ -47,6 +49,16 @@ def _serialize_row_dates(row: dict) -> dict:
             row[k] = str(v)
     return row
 
+#Logging to soms_app.log
+logger = logging.getLogger("SOMS_App")
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "soms_app.log")
+fh = logging.FileHandler("soms_app.log")
+fh.setLevel(logging.INFO)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 
 app = FastAPI(title = 'SOMS_API')
@@ -61,6 +73,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#middleware for logging requests and responses
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    try:
+        response = await call_next(request)
+        logger.info(f"Response status: {response.status_code}")
+        return response
+    except Exception:
+        logger.exception("Request failed")
+        return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 
 @app.get("/health")
