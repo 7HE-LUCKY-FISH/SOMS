@@ -1,4 +1,8 @@
 import mysql.connector
+import base64
+import logging
+import os
+import mimetypes
 from datetime import date, datetime, time as dtime
 import uvicorn
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
@@ -28,12 +32,7 @@ from models import (
     MatchCreate
 )
 from werkzeug.security import check_password_hash, generate_password_hash
-import base64
-import logging
-import os
 from starlette.responses import JSONResponse
-
-import mimetypes
 
 load_dotenv()
 
@@ -86,8 +85,6 @@ async def log_requests(request: Request, call_next):
     except Exception:
         logger.exception("Request failed")
         return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-
-
 
 
 @app.get("/health")
