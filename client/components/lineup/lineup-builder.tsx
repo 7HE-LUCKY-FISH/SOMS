@@ -9,14 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SoccerPitch } from '@/components/lineup/soccer-pitch'
 import { PlayerList } from '@/components/lineup/player-list'
 import { Save, Download, RotateCcw, Loader2 } from 'lucide-react'
-import { apiGetAllPlayers } from '@/lib/api'
+import { apiGetAllPlayers, apiGetUpcomingFixtures, apiGetAllFormations, apiCreateLineup, apiGetAllLineups, apiGetLineupById } from '@/lib/api'
 import { Card } from '@/components/ui/card'
+import { useToast } from '@/components/ui/use-toast'
 
 export type Formation = '4-3-3' | '4-2-3-1' | '3-5-2' | '4-4-2' | 'custom'
 
 export interface Player {
   id: string
   name: string
+  last_name: string
   position: string
   availability: 'available' | 'doubtful' | 'injured'
   number: number
@@ -101,8 +103,43 @@ const formationTemplates: Record<Formation, Omit<PitchSlot, 'player'>[]> = {
   'custom': []
 }
 
+// Mapping from frontend slot IDs to DB role numbers (1-11)
+// Ensures unique mapping for each formation
+const formationRoleMap: Record<Formation, Record<string, number>> = {
+  '4-3-3': {
+    'gk': 1, 'lb': 3, 'cb1': 4, 'cb2': 5, 'rb': 2,
+    'cm1': 6, 'cm2': 8, 'cm3': 10,
+    'lw': 11, 'st': 9, 'rw': 7
+  },
+  '4-2-3-1': {
+    'gk': 1, 'lb': 3, 'cb1': 4, 'cb2': 5, 'rb': 2,
+    'cdm1': 6, 'cdm2': 8,
+    'lam': 11, 'cam': 10, 'ram': 7,
+    'st': 9
+  },
+  '4-4-2': {
+    'gk': 1, 'lb': 3, 'cb1': 4, 'cb2': 5, 'rb': 2,
+    'lm': 11, 'cm1': 6, 'cm2': 8, 'rm': 7,
+    'st1': 9, 'st2': 10
+  },
+  '3-5-2': {
+    'gk': 1,
+    'cb1': 4, 'cb2': 5, 'cb3': 3, // Using LB role for 3rd CB
+    'lwb': 11, // Using LM role
+    'cm1': 6, 'cm2': 8, 'cm3': 10, // Using CAM role
+    'rwb': 2, // Using RB role
+    'st1': 9, 'st2': 7 // Using RM role for 2nd striker
+  },
+  'custom': {}
+}
+
 export function LineupBuilder({ user }: { user: User }) {
+  const { toast } = useToast()
   const [players, setPlayers] = useState<Player[]>([])
+  const [matches, setMatches] = useState<any[]>([])
+  const [dbFormations, setDbFormations] = useState<any[]>([])
+  const [savedLineups, setSavedLineups] = useState<any[]>([])
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const [formation, setFormation] = useState<Formation>('4-3-3')
   const [lineupName, setLineupName] = useState('')
@@ -113,14 +150,21 @@ export function LineupBuilder({ user }: { user: User }) {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    async function fetchPlayers() {
+    async function fetchData() {
+      setIsLoading(true)
       try {
-        setIsLoading(true)
-        const response = await apiGetAllPlayers()
-        if (response.data) {
-          const transformedPlayers: Player[] = response.data.map((p: ApiPlayer) => ({
+        // Load critical data first
+        const [playersRes, matchesRes, formationsRes] = await Promise.all([
+          apiGetAllPlayers(),
+          apiGetUpcomingFixtures(),
+          apiGetAllFormations()
+        ])
+
+        if (playersRes.data) {
+          const transformedPlayers: Player[] = playersRes.data.map((p: ApiPlayer) => ({
             id: String(p.player_id),
             name: `${p.first_name} ${p.middle_name ? p.middle_name + ' ' : ''}${p.last_name}`,
+            last_name: p.last_name,
             position: p.positions || 'N/A',
             availability: p.is_injured ? 'injured' : (p.is_active ? 'available' : 'doubtful'),
             number: p.player_id,
@@ -129,15 +173,170 @@ export function LineupBuilder({ user }: { user: User }) {
           }))
           setPlayers(transformedPlayers)
         }
+
+        if (matchesRes.data) {
+          setMatches(matchesRes.data)
+        }
+
+        if (formationsRes.data) {
+          setDbFormations(formationsRes.data)
+        }
+
+        // Load saved lineups separately so it doesn't block the main UI if it fails
+        try {
+          const lineupsRes = await apiGetAllLineups()
+          if (lineupsRes.data) {
+            setSavedLineups(lineupsRes.data)
+          }
+        } catch (lineupError) {
+          console.error('Error fetching lineups:', lineupError)
+          // We don't show a toast here to avoid annoying the user if just this part fails
+        }
+
       } catch (err) {
-        console.error('[v0] Error fetching players:', err)
+        console.error('[v0] Error fetching data:', err)
+        toast({
+          title: "Error",
+          description: "Failed to load lineup data",
+          variant: "destructive"
+        })
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchPlayers()
+    fetchData()
   }, [])
+
+  // Auto-load lineup when match is selected or formation changes
+  useEffect(() => {
+    async function loadLineupForMatch() {
+      if (!selectedMatchId) return
+
+      // Find DB formation ID for current formation
+      const dbFormation = dbFormations.find(f => f.code === formation)
+      
+      // Find lineup that matches both match_id AND formation_id
+      const existingLineup = savedLineups.find((l: any) => 
+        String(l.match_id) === selectedMatchId && 
+        (!dbFormation || l.formation_id === dbFormation.formation_id)
+      )
+      
+      if (existingLineup) {
+        try {
+          setIsLoading(true)
+          const detailsRes = await apiGetLineupById(existingLineup.lineup_id)
+          
+          if (detailsRes.data) {
+            const data = detailsRes.data
+            
+            if (formationTemplates[formation]) {
+              // Map players to slots
+              const newSlots = formationTemplates[formation].map(templateSlot => {
+                const roleNo = formationRoleMap[formation]?.[templateSlot.id]
+                const slotData = data.slots.find((s: any) => s.slot_no === roleNo)
+                
+                let player: Player | null = null
+                if (slotData) {
+                  const foundPlayer = players.find(p => p.id === String(slotData.player_id))
+                  if (foundPlayer) {
+                    player = foundPlayer
+                  }
+                }
+                
+                return {
+                  ...templateSlot,
+                  player
+                }
+              })
+              
+              setSlots(newSlots)
+              setBench([]) 
+              
+              toast({
+                title: "Lineup Loaded",
+                description: `Loaded saved lineup for ${formation}.`,
+              })
+            }
+          }
+        } catch (err) {
+          console.error("Error loading lineup details:", err)
+          toast({
+            title: "Error",
+            description: "Failed to load existing lineup details.",
+            variant: "destructive"
+          })
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        // Reset if no lineup exists for this match and formation
+        setSlots(formationTemplates[formation].map(slot => ({ ...slot, player: null })))
+        setBench([])
+      }
+    }
+
+    if (players.length > 0) {
+      loadLineupForMatch()
+    }
+  }, [selectedMatchId, savedLineups, players, formation, dbFormations]) // Depend on players to ensure we can map IDs to objects
+
+  const handleSave = async () => {
+    if (!selectedMatchId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a match to save the lineup for.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      // Find DB formation ID
+      const dbFormation = dbFormations.find(f => f.code === formation)
+      const formationId = dbFormation ? dbFormation.formation_id : 1 // Default to 1 if not found
+
+      // Map slots to players
+      const playersMap: Record<number, number> = {}
+      slots.forEach(slot => {
+        if (slot.player) {
+          const roleNo = formationRoleMap[formation]?.[slot.id]
+          if (roleNo) {
+            playersMap[roleNo] = parseInt(slot.player.id)
+          }
+        }
+      })
+
+      const payload = {
+        match_id: parseInt(selectedMatchId),
+        team_id: 1, // Default to team 1 for now
+        formation_id: formationId,
+        is_starting: true,
+        minute_applied: 0,
+        players: playersMap
+      }
+
+      await apiCreateLineup(payload)
+
+      // Refresh saved lineups list
+      const lineupsRes = await apiGetAllLineups()
+      if (lineupsRes.data) {
+        setSavedLineups(lineupsRes.data)
+      }
+
+      toast({
+        title: "Success",
+        description: "Lineup saved successfully!",
+      })
+    } catch (error) {
+      console.error('Error saving lineup:', error)
+      toast({
+        title: "Error",
+        description: "Failed to save lineup",
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleFormationChange = (newFormation: Formation) => {
     setFormation(newFormation)
@@ -230,15 +429,32 @@ export function LineupBuilder({ user }: { user: User }) {
 
       <div className="flex-1 flex flex-col bg-background overflow-auto">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex-1 w-full sm:w-auto">
-            <Label htmlFor="lineup-name" className="mb-2 block">Lineup Name</Label>
-            <Input
-              id="lineup-name"
-              placeholder="e.g., vs City FC - Home"
-              value={lineupName}
-              onChange={(e) => setLineupName(e.target.value)}
-              className="max-w-xs"
-            />
+          <div className="flex-1 w-full sm:w-auto flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="match-select" className="mb-2 block">Match</Label>
+              <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                <SelectTrigger id="match-select" className="w-full min-w-[200px]">
+                  <SelectValue placeholder="Select a match" />
+                </SelectTrigger>
+                <SelectContent>
+                  {matches.map((match) => (
+                    <SelectItem key={match.match_id} value={String(match.match_id)}>
+                      {match.opponent_team} ({new Date(match.match_date).toLocaleDateString()})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="lineup-name" className="mb-2 block">Lineup Name</Label>
+              <Input
+                id="lineup-name"
+                placeholder="e.g., vs City FC - Home"
+                value={lineupName}
+                onChange={(e) => setLineupName(e.target.value)}
+                className="max-w-xs"
+              />
+            </div>
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
@@ -262,7 +478,7 @@ export function LineupBuilder({ user }: { user: User }) {
               <Download className="size-4 mr-2" />
               Export
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={handleSave}>
               <Save className="size-4 mr-2" />
               Save
             </Button>

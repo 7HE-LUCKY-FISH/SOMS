@@ -425,11 +425,27 @@ class Lineup:
             conn = get_db_connection()
             conn.start_transaction()
             cursor = conn.cursor()
+
+            # Check if lineup exists for this match/team/formation
             cursor.execute("""
-                INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
-                VALUES (%s,%s,%s,%s,%s)
+                SELECT lineup_id FROM match_lineup 
+                WHERE match_id = %s AND team_id = %s AND formation_id = %s 
+                AND is_starting = %s AND minute_applied = %s
             """, (lc.match_id, lc.team_id, lc.formation_id, lc.is_starting, lc.minute_applied))
-            lineup_id = cursor.lastrowid
+            
+            existing = cursor.fetchone()
+            
+            if existing:
+                lineup_id = existing[0]
+                # Delete existing slots to replace them
+                cursor.execute("DELETE FROM match_lineup_slot WHERE lineup_id = %s", (lineup_id,))
+            else:
+                cursor.execute("""
+                    INSERT INTO match_lineup (match_id, team_id, formation_id, is_starting, minute_applied)
+                    VALUES (%s,%s,%s,%s,%s)
+                """, (lc.match_id, lc.team_id, lc.formation_id, lc.is_starting, lc.minute_applied))
+                lineup_id = cursor.lastrowid
+
             for slot_no, player_id in lc.players.items():
                 cursor.execute("""
                     INSERT INTO match_lineup_slot (lineup_id, slot_no, player_id)

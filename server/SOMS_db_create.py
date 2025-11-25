@@ -42,6 +42,10 @@ create table if not exists team
 """)
 
 cursor.execute("""
+    INSERT IGNORE INTO team (team_id, name, level) VALUES (1, 'SOMS FC', 'Senior');
+""")
+
+cursor.execute("""
     create table if not exists staff
     ( staff_id int auto_increment primary key,
         first_name varchar(50) not null,
@@ -278,6 +282,14 @@ cursor.execute("""
   name VARCHAR(100)
     );
             
+""")
+
+cursor.execute("""
+    INSERT IGNORE INTO formation (formation_id, code, name) VALUES 
+    (1, '4-3-3', '4-3-3 Standard'),
+    (2, '4-4-2', '4-4-2 Standard'),
+    (3, '4-2-3-1', '4-2-3-1 Wide'),
+    (4, '3-5-2', '3-5-2 Attacking');
 """)
 
 

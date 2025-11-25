@@ -603,7 +603,7 @@ def get_all_lineups():
                 f.name as formation_name,
                 m.name as match_name,
                 m.match_date,
-                t.team_name
+                t.name as team_name
             FROM match_lineup ml
             JOIN formation f ON f.formation_id = ml.formation_id
             LEFT JOIN match_table m ON m.match_id = ml.match_id

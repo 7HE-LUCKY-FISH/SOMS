@@ -6,16 +6,39 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Plus, Calendar, Users, AlertCircle, Loader2 } from 'lucide-react'
-import { apiGetUpcomingFixtures, apiGetAllPlayers, apiGetMedicalReports } from '@/lib/api'
+import { apiGetUpcomingFixtures, apiGetAllPlayers } from '@/lib/api'
+// took out apiGetMedicalReports
+interface Player {
+  player_id: number
+  first_name: string
+  middle_name?: string
+  last_name: string
+  positions?: string
+  is_active: boolean
+  is_injured: boolean
+  salary: number
+  transfer_value?: number
+  contract_end_date?: string
+  scouted_player: boolean
+  photo?: string
+  photo_content_type?: string
+}
+
+interface Match {
+  match_id: number
+  opponent_team: string
+  match_date: string
+  venue: string
+}
 
 interface CoachDashboardProps {
   user: User
 }
 
 export function CoachDashboard({ user }: CoachDashboardProps) {
-  const [nextMatch, setNextMatch] = useState<any>(null)
+  const [nextMatch, setNextMatch] = useState<Match | null>(null)
   const [playerStats, setPlayerStats] = useState({ available: 0, doubtful: 0, injured: 0 })
-  const [unavailablePlayers, setUnavailablePlayers] = useState<any[]>([])
+  const [unavailablePlayers, setUnavailablePlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,17 +46,18 @@ export function CoachDashboard({ user }: CoachDashboardProps) {
       try {
         const matchesRes = await apiGetUpcomingFixtures()
         if (matchesRes.data && matchesRes.data.length > 0) {
-          setNextMatch(matchesRes.data[0])
+          setNextMatch(matchesRes.data[0] as Match)
         }
 
         const playersRes = await apiGetAllPlayers()
         if (playersRes.data) {
-          const available = playersRes.data.filter(p => p.is_active && !p.is_injured).length
-          const injured = playersRes.data.filter(p => p.is_injured).length
-          const total = playersRes.data.filter(p => p.is_active).length
+          const players = playersRes.data as Player[]
+          const available = players.filter(p => p.is_active && !p.is_injured).length
+          const injured = players.filter(p => p.is_injured).length
+          const total = players.filter(p => p.is_active).length
           setPlayerStats({ available, doubtful: total - available - injured, injured })
 
-          const injured_players = playersRes.data.filter(p => p.is_injured).slice(0, 3)
+          const injured_players = players.filter(p => p.is_injured).slice(0, 3)
           setUnavailablePlayers(injured_players)
         }
       } catch (error) {
