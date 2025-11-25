@@ -1,0 +1,60 @@
+2025-11-24 18:44:58,010 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/player_details/16
+2025-11-24 18:44:58,010 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/player_details/16
+2025-11-24 18:44:58,126 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:44:58,126 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:44:59,560 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:44:59,560 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:44:59,630 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:44:59,630 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:44:59,978 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:44:59,978 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:00,056 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:00,056 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:00,860 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/staff
+2025-11-24 18:45:00,860 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/staff
+2025-11-24 18:45:00,861 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:00,861 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:00,878 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/staff
+2025-11-24 18:45:00,878 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/staff
+2025-11-24 18:45:00,945 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:00,945 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:01,937 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:01,937 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:01,967 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/medical_reports
+2025-11-24 18:45:01,967 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/medical_reports
+2025-11-24 18:45:01,996 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:01,996 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:02,006 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:02,006 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:02,011 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:02,011 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:02,083 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:02,083 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:10,178 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:10,178 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:10,179 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:10,179 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:10,297 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:10,297 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:10,306 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:10,306 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,712 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/medical_report/create
+2025-11-24 18:45:34,712 - SOMS_App - INFO - Incoming request: OPTIONS http://localhost:8000/medical_report/create
+2025-11-24 18:45:34,712 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,712 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,716 - SOMS_App - INFO - Incoming request: POST http://localhost:8000/medical_report/create
+2025-11-24 18:45:34,716 - SOMS_App - INFO - Incoming request: POST http://localhost:8000/medical_report/create
+2025-11-24 18:45:34,799 - SOMS_App - INFO - Response status: 201
+2025-11-24 18:45:34,799 - SOMS_App - INFO - Response status: 201
+2025-11-24 18:45:34,807 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:34,807 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/medical_reports
+2025-11-24 18:45:34,808 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:34,808 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:34,929 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,929 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,934 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:34,934 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:47,548 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:47,548 - SOMS_App - INFO - Incoming request: GET http://localhost:8000/players
+2025-11-24 18:45:47,611 - SOMS_App - INFO - Response status: 200
+2025-11-24 18:45:47,611 - SOMS_App - INFO - Response status: 200
