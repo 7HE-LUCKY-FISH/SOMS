@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card'
 import { Search, Loader2, UserCircle2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
+import { CreatePlayerDialog } from '@/components/players/create-player-dialog'
 
 interface Player {
   player_id: number
@@ -96,6 +97,11 @@ export function PlayerGrid({ userRole }: PlayerGridProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Players</h2>
+        <CreatePlayerDialog onPlayerCreated={fetchPlayers} />
+      </div>
+
       <Card className="p-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">

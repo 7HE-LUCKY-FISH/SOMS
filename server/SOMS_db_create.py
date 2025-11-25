@@ -42,6 +42,10 @@ create table if not exists team
 """)
 
 cursor.execute("""
+    INSERT IGNORE INTO team (team_id, name, level) VALUES (1, 'SOMS FC', 'Senior');
+""")
+
+cursor.execute("""
     create table if not exists staff
     ( staff_id int auto_increment primary key,
         first_name varchar(50) not null,
@@ -111,12 +115,15 @@ create table if not exists player
     transfer_value DECIMAL(10,2),
     contract_end_date DATE NOT NULL,
     scouted_player BOOLEAN DEFAULT FALSE,
+    team_id INT NULL,
     -- profile photo stored in the DB (LONGBLOB): binary, content type, filename, size and timestamp
     photo LONGBLOB,
     photo_content_type VARCHAR(100),
     photo_filename VARCHAR(255),
     photo_size BIGINT,
-    photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    photo_uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_player_team FOREIGN KEY (team_id) REFERENCES team(team_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_player_team (team_id)
 );
 """)
 #scouted_player indicates if the player is being scouted and not on team
@@ -278,6 +285,14 @@ cursor.execute("""
   name VARCHAR(100)
     );
             
+""")
+
+cursor.execute("""
+    INSERT IGNORE INTO formation (formation_id, code, name) VALUES 
+    (1, '4-3-3', '4-3-3 Standard'),
+    (2, '4-4-2', '4-4-2 Standard'),
+    (3, '4-2-3-1', '4-2-3-1 Wide'),
+    (4, '3-5-2', '3-5-2 Attacking');
 """)
 
 
