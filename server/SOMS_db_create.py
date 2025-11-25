@@ -366,7 +366,33 @@ cursor.execute("""
 
 # Insert sample players with images
 players_data = [
-    ('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
+('Andre', None, 'Onana', 7000000.00, 'GK', 1, 0, 35000000.00, '2028-06-30', 0, 'player_images/Onana.png'),
+('Altay', None, 'Bayindir', 3000000.00, 'GK', 1, 0, 8000000.00, '2027-06-30', 0, 'player_images/Bayindir.png'),
+('Tom', None, 'Heaton', 1500000.00, 'GK', 1, 0, 1000000.00, '2025-06-30', 0, 'player_images/Heaton.png'),
+
+('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
+('Aaron', None, 'Wan-Bissaka', 4000000.00, 'RB', 1, 0, 20000000.00, '2025-06-30', 0,'player_images/Wan-Bissaka.png'),
+('Raphael', None, 'Varane', 10000000.00, 'CB', 1, 0, 25000000.00, '2025-06-30', 0, 'player_images/Varane.png'),
+('Lisandro', None, 'Martinez', 8000000.00, 'CB', 1, 0, 40000000.00, '2027-06-30', 0, 'player_images/Martinez.png'),
+('Leny', None, 'Yoro', 6000000.00, 'CB', 1, 0, 35000000.00, '2029-06-30', 0, 'player_images/Yoro.png'),
+('Harry', None, 'Maguire', 9000000.00, 'CB', 1, 0, 15000000.00, '2025-06-30', 0, 'player_images/Maguire.png'),
+('Jonny', None, 'Evans', 2000000.00, 'CB', 1, 0, 1000000.00, '2025-06-30', 0, 'player_images/Evans.png'),
+('Luke', None, 'Shaw', 7000000.00, 'LB', 1, 1, 25000000.00, '2027-06-30', 0, 'player_images/Shaw.png'),
+('Noussair', None, 'Mazraoui', 4000000.00, 'LB,RB', 1, 0, 25000000.00, '2027-06-30', 0,  'player_images/Mazraoui.png'),
+
+('Casemiro', None, 'Casemiro', 12000000.00, 'CDM', 1, 0, 30000000.00, '2026-06-30', 0,  'player_images/Casemiro.png'),
+('Kobbie', None, 'Mainoo', 1000000.00, 'CM', 1, 0, 25000000.00, '2027-06-30', 0,  'player_images/Mainoo.png'),
+('Scott', None, 'McTominay', 4000000.00, 'CM', 1, 0, 18000000.00, '2025-06-30', 0,  'player_images/McTominay.png'),
+('Christian', None, 'Eriksen', 6000000.00, 'CM', 1, 0, 8000000.00, '2025-06-30', 0,  'player_images/Eriksen.png'),
+('Bruno', None, 'Fernandes', 12000000.00, 'CAM', 1, 0, 70000000.00, '2026-06-30', 0,  'player_images/Fernandes.png'),
+('Mason', None, 'Mount', 7000000.00, 'CM', 1, 0, 50000000.00, '2028-06-30', 0,  'player_images/Mount.png'),
+
+('Marcus', None, 'Rashford', 10000000.00, 'LW', 1, 0, 80000000.00, '2028-06-30', 0,  'player_images/Rashford.png'),
+('Alejandro', None, 'Garnacho', 2000000.00, 'LW', 1, 0, 60000000.00, '2028-06-30', 0,  'player_images/Garnacho.png'),
+('Antony', None, 'Antony', 8000000.00, 'RW', 1, 0, 40000000.00, '2027-06-30', 0,  'player_images/Antony.png'),
+('Jadon', None, 'Sancho', 8000000.00, 'RW', 1, 0, 35000000.00, '2026-06-30', 0,  'player_images/Sancho.png'),
+('Rasmus', None, 'Hojlund', 6000000.00, 'ST', 1, 0, 50000000.00, '2028-06-30', 0,  'player_images/Hojlund.png'),
+('Anthony', None, 'Martial', 8000000.00, 'ST', 1, 0, 12000000.00, '2024-06-30', 0,  'player_images/Martial.png')
 ]
 
 for first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player, photo_filename in players_data:
