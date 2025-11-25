@@ -20,6 +20,8 @@ export interface Player {
   position: string
   availability: 'available' | 'doubtful' | 'injured'
   number: number
+  photo?: string
+  photo_content_type?: string
 }
 
 // fix implicity issue on any type line 115 p
@@ -31,6 +33,9 @@ interface ApiPlayer {
   positions?: string
   is_active: boolean
   is_injured: boolean
+  photo?: string
+  photo_content_type?: string
+  photo_filename?: string
 }
 
 export interface PitchSlot {
@@ -118,7 +123,9 @@ export function LineupBuilder({ user }: { user: User }) {
             name: `${p.first_name} ${p.middle_name ? p.middle_name + ' ' : ''}${p.last_name}`,
             position: p.positions || 'N/A',
             availability: p.is_injured ? 'injured' : (p.is_active ? 'available' : 'doubtful'),
-            number: p.player_id
+            number: p.player_id,
+            photo: p.photo,
+            photo_content_type: p.photo_content_type
           }))
           setPlayers(transformedPlayers)
         }
@@ -292,9 +299,18 @@ export function LineupBuilder({ user }: { user: User }) {
                   key={player.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, player)}
-                  className="px-3 py-2 bg-secondary rounded-lg text-sm font-medium text-secondary-foreground cursor-move hover:bg-secondary/80 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg text-sm font-medium text-secondary-foreground cursor-move hover:bg-secondary/80 transition-colors"
                 >
-                  {player.number}. {player.name}
+                  {player.photo ? (
+                    <img
+                      src={`data:${player.photo_content_type};base64,${player.photo}`}
+                      alt={player.name}
+                      className="size-6 rounded object-cover"
+                    />
+                  ) : (
+                    <span>{player.number}.</span>
+                  )}
+                  <span>{player.name}</span>
                 </div>
               ))
             )}

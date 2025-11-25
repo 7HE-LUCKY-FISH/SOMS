@@ -60,12 +60,13 @@ export function DashboardNav({ user }: DashboardNavProps) {
         transition-transform duration-300
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Logo */}
         <div className="p-6 border-b border-border">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
-              <Shield className="size-6 text-primary-foreground" />
-            </div>
+            <img
+              src="/SOMS-Logo2.png"
+              alt="SOMS Logo"
+              className="h-20 w-auto object-contain"
+            />
             <span className="font-semibold text-xl text-foreground">SOMS</span>
           </Link>
         </div>

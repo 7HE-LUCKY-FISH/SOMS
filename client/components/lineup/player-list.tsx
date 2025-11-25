@@ -30,8 +30,16 @@ export function PlayerList({ players, onDragStart }: PlayerListProps) {
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">{player.number}</span>
+              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+                {player.photo ? (
+                  <img
+                    src={`data:${player.photo_content_type};base64,${player.photo}`}
+                    alt={player.name}
+                    className="size-full object-cover object-top"
+                  />
+                ) : (
+                  <span className="text-xs font-bold text-primary">{player.number}</span>
+                )}
               </div>
               <div>
                 <p className="font-medium text-sm text-foreground">{player.name}</p>

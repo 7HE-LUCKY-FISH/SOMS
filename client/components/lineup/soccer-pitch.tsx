@@ -58,11 +58,23 @@ export function SoccerPitch({ slots, onDropOnSlot, onRemoveFromSlot, pitchBgClas
           >
             {slot.player ? (
               <div className="relative group">
-                <div className="size-16 sm:size-20 bg-primary text-primary-foreground rounded-2xl border-2 border-white shadow-lg flex flex-col items-center justify-center cursor-move">
-                  <span className="text-xs font-bold">{slot.player.number}</span>
-                  <span className="text-[10px] font-medium text-center leading-tight mt-0.5 px-1 truncate max-w-full">
-                    {slot.player.name.split(' ').pop()}
-                  </span>
+                <div className="size-16 sm:size-20 bg-primary text-primary-foreground rounded-2xl border-2 border-white shadow-lg flex flex-col items-center justify-center cursor-move overflow-hidden relative">
+                  {slot.player.photo ? (
+                    <>
+                      <img
+                        src={`data:${slot.player.photo_content_type};base64,${slot.player.photo}`}
+                        alt={slot.player.name}
+                        className="size-full object-cover rounded-2xl object-top"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs font-bold">{slot.player.last_name}</span>
+                      <span className="text-[10px] font-medium text-center leading-tight mt-0.5 px-1 truncate max-w-full">
+                        {slot.player.name.split(' ').pop()}
+                      </span>
+                    </>
+                  )}
                 </div>
                 {slot.player.availability !== 'available' && (
                   <div className={`absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center text-xs font-bold ${

@@ -348,5 +348,31 @@ cursor.execute("""
 
 
 #someone test for stability and performance
+
+# Insert sample players with images
+players_data = [
+    ('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
+]
+
+for first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player, photo_filename in players_data:
+    photo_data = None
+    photo_content_type = 'image/png'
+    photo_size = None
+    full_path = os.path.join(os.path.dirname(__file__), photo_filename)
+    if os.path.exists(full_path):
+        with open(full_path, 'rb') as f:
+            photo_data = f.read()
+        photo_size = len(photo_data)
+        print(f"Read image file: {full_path}, size: {photo_size} bytes")
+    else:
+        print(f"Image file not found: {full_path}")
+    
+    cursor.execute("""
+        INSERT INTO player (first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player,
+            photo, photo_content_type, photo_filename, photo_size, photo_uploaded_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+    """, (first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player,
+          photo_data, photo_content_type, photo_filename, photo_size))
+
 mydb.commit()
 cursor.close()

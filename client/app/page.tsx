@@ -197,7 +197,7 @@ export default function Home() {
         <div className="container mx-auto px-4 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-2 h-full">
-              <img src="/SOMS-Logo.png" alt="SOMS Logo" className="h-full" />
+              <img src="/SOMS-Logo2.png" alt="SOMS Logo" className="h-full" />
             </div>
             <p className="text-sm text-muted-foreground">
               2025 Soccer Operations Management System

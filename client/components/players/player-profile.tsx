@@ -53,6 +53,11 @@ interface Player {
   scouted_player: boolean
   medical_reports: MedicalReport[]
   match_stats: PlayerStats[]
+  photo?: string
+  photo_content_type?: string
+  photo_filename?: string
+  photo_size?: number
+  photo_uploaded_at?: string
 }
 
 interface PlayerProfileProps {
@@ -152,6 +157,7 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
           <TabsTrigger value="matches">Match Logs</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
           <TabsTrigger value="medical">Medical</TabsTrigger>
+          <TabsTrigger value="photos">Photos</TabsTrigger>
           {canAddNotes && <TabsTrigger value="notes">Notes</TabsTrigger>}
         </TabsList>
 
@@ -368,6 +374,49 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
             </Card>
           </TabsContent>
         )}
+
+        <TabsContent value="photos">
+          <Card className="p-6">
+            <h3 className="font-semibold text-foreground mb-4">Player Photos</h3>
+            {player.photo ? (
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <img
+                    src={`data:${player.photo_content_type};base64,${player.photo}`}
+                    alt={player.photo_filename || 'Player photo'}
+                    className="max-w-full h-auto rounded-lg shadow-md object-top"
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Filename</p>
+                    <p className="font-medium text-foreground">{player.photo_filename || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Size</p>
+                    <p className="font-medium text-foreground">
+                      {player.photo_size ? `${(player.photo_size / 1024).toFixed(2)} KB` : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Uploaded At</p>
+                    <p className="font-medium text-foreground">
+                      {player.photo_uploaded_at ? new Date(player.photo_uploaded_at).toLocaleString() : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Content Type</p>
+                    <p className="font-medium text-foreground">{player.photo_content_type || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No photo available</p>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )

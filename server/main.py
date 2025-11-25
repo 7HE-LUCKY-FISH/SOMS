@@ -28,6 +28,7 @@ from models import (
     MatchCreate
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+import base64
 
 load_dotenv()
 
@@ -228,7 +229,8 @@ def get_all_players():
     cursor = connection.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT player_id, first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player
+            SELECT player_id, first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player,
+                   photo, photo_content_type, photo_filename, photo_size, photo_uploaded_at
             FROM player
             ORDER BY last_name, first_name
         """)
@@ -236,6 +238,12 @@ def get_all_players():
         if rows is None:
             rows = []
         rows = [_serialize_row_dates(r) for r in rows]
+        
+        # Convert photos to base64
+        for row in rows:
+            if row.get('photo'):
+                row['photo'] = base64.b64encode(row['photo']).decode('utf-8')
+        
         return {"status": "success", "count": len(rows), "data": rows}
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))
@@ -765,7 +773,12 @@ def get_player_details(player_id: int):
                 is_injured,
                 transfer_value,
                 contract_end_date,
-                scouted_player
+                scouted_player,
+                photo,
+                photo_content_type,
+                photo_filename,
+                photo_size,
+                photo_uploaded_at
             FROM player
             WHERE player_id = %s
         """, (player_id,))
@@ -775,6 +788,10 @@ def get_player_details(player_id: int):
             raise HTTPException(status_code=404, detail="Player not found")
         
         player = _serialize_row_dates(player)
+        
+        # Convert photo to base64 if exists
+        if player.get('photo'):
+            player['photo'] = base64.b64encode(player['photo']).decode('utf-8')
         
         # Get medical reports for the player
         cursor.execute("""

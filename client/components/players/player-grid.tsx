@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card } from '@/components/ui/card'
-import { Search, UserCircle2, Loader2 } from 'lucide-react'
+import { Search, Loader2, UserCircle2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
 
 interface Player {
@@ -21,6 +21,8 @@ interface Player {
   transfer_value?: number
   contract_end_date?: string
   scouted_player: boolean
+  photo?: string
+  photo_content_type?: string
 }
 
 interface PlayerGridProps {
@@ -145,8 +147,16 @@ export function PlayerGrid({ userRole }: PlayerGridProps) {
             <Link key={player.player_id} href={`/players/${player.player_id}`}>
               <Card className="p-6 hover:border-primary transition-colors cursor-pointer">
                 <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UserCircle2 className="size-12 text-primary" />
+                  <div className="size-20 bg-primary/10 flex items-center justify-center overflow-hidden rounded-lg">
+                    {player.photo ? (
+                      <img
+                        src={`data:${player.photo_content_type};base64,${player.photo}`}
+                        alt={`${player.first_name} ${player.last_name}`}
+                        className="size-full object-cover object-top rounded-lg"
+                      />
+                    ) : (
+                      <UserCircle2 className="size-12 text-primary" />
+                    )}
                   </div>
                   
                   <div className="flex-1">
