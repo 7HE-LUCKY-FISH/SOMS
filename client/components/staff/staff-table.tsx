@@ -33,26 +33,16 @@ export default function StaffTable() {
       try {
         setIsLoading(true)
         const response = await apiGetAllStaff()
-        // DEBUG: log raw response so developer can inspect shape in browser console
-        // (helps when backend returns different shape or an error object)
-        // eslint-disable-next-line no-console
         console.debug('[staff-table] api response:', response)
 
-        // Handle a few possible response shapes for resiliency:
-        // 1) { status, data: [...] }
-        // 2) [...] (raw array)
-        // 3) { error: '...' }
         const anyResp = response as any
         if (Array.isArray(anyResp)) {
           setStaff(anyResp)
         } else if (anyResp && Array.isArray(anyResp.data)) {
           setStaff(anyResp.data)
         } else if (anyResp && anyResp.status && anyResp.status !== 'ok') {
-          // API returned an object but not success
           setError(anyResp.error || JSON.stringify(anyResp))
         } else {
-          // Unexpected shape
-          // eslint-disable-next-line no-console
           console.warn('[staff-table] unexpected response shape', anyResp)
           setError('Unexpected API response')
         }
@@ -117,10 +107,10 @@ export default function StaffTable() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="coach">Coach</SelectItem>
-                <SelectItem value="scout">Scout</SelectItem>
-                <SelectItem value="medical">Medical</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="Coach">Coach</SelectItem>
+                <SelectItem value="Scout">Scout</SelectItem>
+                <SelectItem value="Med">Medical</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
               </SelectContent>
             </Select>
 

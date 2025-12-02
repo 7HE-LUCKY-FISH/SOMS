@@ -122,9 +122,17 @@ export function PlayerGrid({ userRole }: PlayerGridProps) {
               <SelectContent>
                 <SelectItem value="all">All Positions</SelectItem>
                 <SelectItem value="GK">Goalkeeper</SelectItem>
-                <SelectItem value="DF">Defender</SelectItem>
-                <SelectItem value="MF">Midfielder</SelectItem>
-                <SelectItem value="FW">Forward</SelectItem>
+                <SelectItem value="RB">Right Back</SelectItem>
+                <SelectItem value="LB">Left Back</SelectItem>
+                <SelectItem value="RW">Right Wing</SelectItem>
+                <SelectItem value="LW">Left Wing</SelectItem>
+                <SelectItem value="CB">Center Back</SelectItem>
+                <SelectItem value="CDB">Central Defensive Midfielderg</SelectItem>
+                <SelectItem value="CM">Central Midfielder</SelectItem>
+                <SelectItem value="CAM">Central Attacking Midfielder</SelectItem>
+                <SelectItem value="RW">Right Winger</SelectItem>
+                <SelectItem value="LW">Left Winger</SelectItem>
+                <SelectItem value="ST">Striker</SelectItem>
               </SelectContent>
             </Select>
 
