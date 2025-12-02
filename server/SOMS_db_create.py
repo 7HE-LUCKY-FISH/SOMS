@@ -108,11 +108,11 @@ create table if not exists player
     first_name VARCHAR(50) NOT NULL,
     middle_name VARCHAR(50),
     last_name VARCHAR(50) NOT NULL,
-    salary DECIMAL(12,2) NOT NULL,
+    salary DECIMAL(10,2) NOT NULL,
     positions VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
     is_injured BOOLEAN DEFAULT FALSE,
-    transfer_value DECIMAL(12,2),
+    transfer_value DECIMAL(10,2),
     contract_end_date DATE NOT NULL,
     scouted_player BOOLEAN DEFAULT FALSE,
     team_id INT NULL,
@@ -127,13 +127,6 @@ create table if not exists player
 );
 """)
 #scouted_player indicates if the player is being scouted and not on team
-
-# Alter existing table columns to support larger values if table already exists
-cursor.execute("""
-ALTER TABLE player 
-MODIFY COLUMN salary DECIMAL(12,2) NOT NULL,
-MODIFY COLUMN transfer_value DECIMAL(12,2)
-""")
 
 
 
@@ -373,32 +366,33 @@ cursor.execute("""
 
 # Insert sample players with images
 players_data = [
-    ('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
-    ('Antony', None, 'Matheus dos Santos', 35000000.00, 'RW', 1, 0, 60000000.00, '2027-06-30', 0, 'player_images/Antony.png'),
-    ('Lisandro', None, 'Martinez', 30000000.00, 'CB', 1, 0, 55000000.00, '2026-06-30', 0, 'player_images/Martinez.png'),
-    ('Casemiro', None, 'de Souza', 45000000.00, 'CDM', 1, 0, 70000000.00, '2025-06-30', 0, 'player_images/Casemiro.png'),
-    ('Bruno', None, 'Fernandes', 50000000.00, 'CAM', 1, 0, 80000000.00, '2026-06-30', 0, 'player_images/Fernandes.png'),
-    ('Marcus', None, 'Rashford', 55000000.00, 'ST', 1, 0, 90000000.00, '2027-06-30', 0, 'player_images/Rashford.png'),
-    ('Jadon', None, 'Sancho', 60000000.00, 'LW', 1, 0, 95000000.00, '2026-06-30', 0, 'player_images/Sancho.png'),
-    ('Cole', None, 'Palmer', 1500000.00, 'CM', 1, 0, 10000000.00, '2025-06-30', 0, 'player_images/Palmer.png'),
-    ('Harry', None, 'Maguire', 25000000.00, 'CB', 1, 0, 40000000.00, '2026-06-30', 0, 'player_images/Maguire.png'),
-    ('Raphael', None, 'Varane', 30000000.00, 'CB', 1, 0, 45000000.00, '2025-06-30', 0, 'player_images/Varane.png'),
-    ('Luke', None, 'Shaw', 20000000.00, 'LB', 1, 0, 35000000.00, '2026-06-30', 0, 'player_images/Shaw.png'),
-    ('Altay', None, 'Bayindir', 500000.00, 'GK', 1, 0, 5000000.00, '2025-06-30', 1, 'player_images/Bayindir.png'),
-    ('Christian', None, 'Eriksen', 10000000.00, 'CAM', 1, 0, 20000000.00, '2025-06-30', 1, 'player_images/Eriksen.png'),
-    ('Rasmus', None, 'Hojlund', 8000000.00, 'ST', 1, 0, 15000000.00, '2027-06-30', 1, 'player_images/Hojlund.png'),
-    ('Kevin', None, 'De Bruyne', 70000000.00, 'CM', 1, 0, 100000000.00, '2025-06-30', 0, 'player_images/DeBruyne.png'),
-    ('Erling', None, 'Haaland', 90000000.00, 'ST', 1, 0, 150000000.00, '2027-06-30', 0, 'player_images/Haaland.png'),
-    ('Virgil', None, 'van Dijk', 60000000.00, 'CB', 1, 0, 80000000.00, '2026-06-30', 0, 'player_images/Dijk.png'),
-    ('Lionel', None, 'Messi', 120000000.00, 'RW', 1, 0, 200000000.00, '2025-06-30', 0, 'player_images/Messi.png'), 
-    ('Christiano', None, 'Ronaldo', 100000000.00, 'ST', 1, 0, 180000000.00, '2025-06-30', 0, 'player_images/Ronaldo.png'),
-    ('Declan', None, 'Rice', 45000000.00, 'CDM', 1, 0, 75000000.00, '2026-06-30', 0, 'player_images/Rice.png'), 
-    ('Kaoru', None, 'Mitoma', 20000000.00, 'LW', 1, 0, 40000000.00, '2027-06-30', 0, 'player_images/Mitoma.png'),
-    ('Heung-Min', None, 'Son', 80000000.00, 'LW', 1, 0, 120000000.00, '2026-06-30', 0, 'player_images/Son.png'),
-    ('Kobbie', None, 'Mainoo', 1000000.00, 'CM', 1, 0, 8000000.00, '2025-06-30', 1, 'player_images/Mainoo.png'), 
-    ('Mason', None, 'Mount', 40000000.00, 'CAM', 1, 0, 70000000.00, '2026-06-30', 0, 'player_images/Mount.png'),
-    ('Jadon', None, 'Sancho', 60000000.00, 'RW', 1, 0, 95000000.00, '2026-06-30', 0, 'player_images/Sancho.png'),
-    ('Andre', None, 'Onana', 15000000.00, 'GK', 1, 0, 30000000.00, '2027-06-30', 0, 'player_images/Onana.png')
+('Andre', None, 'Onana', 7000000.00, 'GK', 1, 0, 35000000.00, '2028-06-30', 0, 'player_images/Onana.png'),
+('Altay', None, 'Bayindir', 3000000.00, 'GK', 1, 0, 8000000.00, '2027-06-30', 0, 'player_images/Bayindir.png'),
+('Tom', None, 'Heaton', 1500000.00, 'GK', 1, 0, 1000000.00, '2025-06-30', 0, 'player_images/Heaton.png'),
+
+('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
+('Aaron', None, 'Wan-Bissaka', 4000000.00, 'RB', 1, 0, 20000000.00, '2025-06-30', 0,'player_images/Wan-Bissaka.png'),
+('Raphael', None, 'Varane', 10000000.00, 'CB', 1, 0, 25000000.00, '2025-06-30', 0, 'player_images/Varane.png'),
+('Lisandro', None, 'Martinez', 8000000.00, 'CB', 1, 0, 40000000.00, '2027-06-30', 0, 'player_images/Martinez.png'),
+('Leny', None, 'Yoro', 6000000.00, 'CB', 1, 0, 35000000.00, '2029-06-30', 0, 'player_images/Yoro.png'),
+('Harry', None, 'Maguire', 9000000.00, 'CB', 1, 0, 15000000.00, '2025-06-30', 0, 'player_images/Maguire.png'),
+('Jonny', None, 'Evans', 2000000.00, 'CB', 1, 0, 1000000.00, '2025-06-30', 0, 'player_images/Evans.png'),
+('Luke', None, 'Shaw', 7000000.00, 'LB', 1, 1, 25000000.00, '2027-06-30', 0, 'player_images/Shaw.png'),
+('Noussair', None, 'Mazraoui', 4000000.00, 'LB,RB', 1, 0, 25000000.00, '2027-06-30', 0,  'player_images/Mazraoui.png'),
+
+('Casemiro', None, 'Casemiro', 12000000.00, 'CDM', 1, 0, 30000000.00, '2026-06-30', 0,  'player_images/Casemiro.png'),
+('Kobbie', None, 'Mainoo', 1000000.00, 'CM', 1, 0, 25000000.00, '2027-06-30', 0,  'player_images/Mainoo.png'),
+('Scott', None, 'McTominay', 4000000.00, 'CM', 1, 0, 18000000.00, '2025-06-30', 0,  'player_images/McTominay.png'),
+('Christian', None, 'Eriksen', 6000000.00, 'CM', 1, 0, 8000000.00, '2025-06-30', 0,  'player_images/Eriksen.png'),
+('Bruno', None, 'Fernandes', 12000000.00, 'CAM', 1, 0, 70000000.00, '2026-06-30', 0,  'player_images/Fernandes.png'),
+('Mason', None, 'Mount', 7000000.00, 'CM', 1, 0, 50000000.00, '2028-06-30', 0,  'player_images/Mount.png'),
+
+('Marcus', None, 'Rashford', 10000000.00, 'LW', 1, 0, 80000000.00, '2028-06-30', 0,  'player_images/Rashford.png'),
+('Alejandro', None, 'Garnacho', 2000000.00, 'LW', 1, 0, 60000000.00, '2028-06-30', 0,  'player_images/Garnacho.png'),
+('Antony', None, 'Antony', 8000000.00, 'RW', 1, 0, 40000000.00, '2027-06-30', 0,  'player_images/Antony.png'),
+('Jadon', None, 'Sancho', 8000000.00, 'RW', 1, 0, 35000000.00, '2026-06-30', 0,  'player_images/Sancho.png'),
+('Rasmus', None, 'Hojlund', 6000000.00, 'ST', 1, 0, 50000000.00, '2028-06-30', 0,  'player_images/Hojlund.png'),
+('Anthony', None, 'Martial', 8000000.00, 'ST', 1, 0, 12000000.00, '2024-06-30', 0,  'player_images/Martial.png')
 ]
 
 for first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player, photo_filename in players_data:
@@ -1224,41 +1218,6 @@ VALUES (%s, %s, %s, %s)
 """, (report_mapping[5], 'Adductor Strain', 'Strain of the adductor longus muscle', '2024-11-05'))
 
 
-"""
-    DON"T ENDABLE THIS WITHOUT CHECKING YOUR PRIVILEGES -7LF
-
- Note: This requires the connecting user to have CREATE ROLE and GRANT privileges
- cursor.execute("CREATE ROLE IF NOT EXISTS 'coach_role';")
- cursor.execute("CREATE ROLE IF NOT EXISTS 'medical_role';")
- cursor.execute("CREATE ROLE IF NOT EXISTS 'scout_role';")
- cursor.execute("CREATE ROLE IF NOT EXISTS 'admin_role';")
-
- # Grant permissions for coach_role: can update matches, scores, scouting reports
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.match_table TO 'coach_role';")
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.player_match_stats TO 'coach_role';")
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.scouting_report TO 'coach_role';")
- cursor.execute("GRANT SELECT ON SOMS.player TO 'coach_role';")
- cursor.execute("GRANT SELECT ON SOMS.team TO 'coach_role';")
- cursor.execute("GRANT SELECT ON SOMS.staff TO 'coach_role';")
-
- # Grant permissions for medical_role: can update medical reports but not contracts
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.medical_report TO 'medical_role';")
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.medical_condition TO 'medical_role';")
- cursor.execute("GRANT SELECT ON SOMS.player TO 'medical_role';")
- cursor.execute("GRANT SELECT ON SOMS.staff TO 'medical_role';")
-
- 
-
- # Grant permissions for scout_role: can update scouting reports
- cursor.execute("GRANT SELECT, UPDATE ON SOMS.scouting_report TO 'scout_role';")
- cursor.execute("GRANT SELECT ON SOMS.player TO 'scout_role';")
- cursor.execute("GRANT SELECT ON SOMS.staff TO 'scout_role';")
-
- 
- cursor.execute("GRANT ALL PRIVILEGES ON SOMS.* TO 'admin_role';")
-"""
-# To assign roles to users, you would need to create MySQL users and grant roles
-# For example, after creating a user: GRANT 'coach_role' TO 'username'@'host';
 
 mydb.commit()
 cursor.close()

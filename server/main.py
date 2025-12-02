@@ -2,6 +2,7 @@ import mysql.connector
 import base64
 import logging
 import os
+import mimetypes
 from datetime import date, datetime, time as dtime
 import uvicorn
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
@@ -54,7 +55,7 @@ logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "soms_app.log")
-fh = logging.FileHandler(log_path)
+fh = logging.FileHandler("soms_app.log")
 fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
@@ -1227,6 +1228,5 @@ def get_player_by_id(player_id: int):
 
 
 if __name__ == "__main__":
-    #we have double run since uvicorn has automatic request logging
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
