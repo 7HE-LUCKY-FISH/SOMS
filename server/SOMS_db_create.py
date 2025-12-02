@@ -1137,5 +1137,93 @@ VALUES (%s, %s, %s, %s, %s)
 'Skilled winger with excellent dribbling and finishing. Age 28, experienced. Transfer value around €60M. Would provide attacking threat from wide positions.'))
 
 
+# Insert sample medical reports
+# Medical reports for injured players
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (1, 'Sprained ankle sustained during training session. Player experiencing pain and swelling in right ankle.', '2024-11-15', 'RICE protocol, anti-inflammatory medication, physiotherapy sessions twice daily', 'Moderate'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (3, 'Hamstring strain from sprint training. Grade 2 tear identified via MRI scan.', '2024-10-28', 'Rest, ice therapy, compression, elevation. Physiotherapy focusing on strengthening exercises.', 'Moderate'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (5, 'Groin injury sustained during match. Player reports sharp pain in right groin area.', '2024-11-05', 'Anti-inflammatory medication, rest from training, gradual return to play protocol', 'Mild'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (7, 'Knee ligament sprain from tackle in training. MRI shows partial ACL tear.', '2024-09-20', 'Immobilization with brace, physiotherapy, possible surgical intervention if no improvement', 'Severe'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (9, 'Shoulder dislocation during aerial challenge. X-ray confirms anterior dislocation.', '2024-10-12', 'Closed reduction performed, sling immobilization for 2 weeks, rehabilitation program', 'Moderate'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (11, 'Calf muscle tear from acceleration training. Ultrasound shows partial tear.', '2024-11-22', 'Rest, ice therapy, compression bandage, graduated return to running program', 'Moderate'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (13, 'Concussion from head collision in match. Player showing symptoms of headache and confusion.', '2024-10-05', 'Immediate removal from play, concussion protocol followed, gradual return to contact training', 'Severe'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (15, 'Achilles tendonitis from overuse. Player reports pain at back of heel.', '2024-09-15', 'Rest from running activities, orthotics, eccentric strengthening exercises, anti-inflammatory medication', 'Mild'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (17, 'Back spasm from heavy lifting in gym. Acute lower back pain with restricted movement.', '2024-11-10', 'Pain management medication, rest, core strengthening exercises, manual therapy', 'Mild'))
+
+cursor.execute("""
+INSERT INTO medical_report (player_id, summary, report_date, treatment, severity_of_injury)
+VALUES (%s, %s, %s, %s, %s)
+""", (19, 'Quadriceps contusion from direct impact. Large hematoma on thigh.', '2024-10-18', 'Ice therapy, compression, elevation, pain management, gradual return to training', 'Moderate'))
+
+
+# Insert medical conditions linked to the medical reports above
+# Get the medical report IDs that were just inserted
+#this might work 
+cursor.execute("SELECT med_report_id, player_id FROM medical_report ORDER BY med_report_id DESC LIMIT 10")
+recent_reports = cursor.fetchall()
+
+# Create a mapping of player_id to med_report_id for the conditions
+report_mapping = {report[1]: report[0] for report in recent_reports}
+
+# Insert medical conditions for each medical report
+# Player 1 (Dalot) - Ankle sprain
+cursor.execute("""
+INSERT INTO medical_condition (med_report_id, condition_name, description, diagnosis_date)
+VALUES (%s, %s, %s, %s)
+""", (report_mapping[1], 'Lateral Ankle Sprain', 'Grade 2 sprain of the lateral ligaments with swelling and bruising', '2024-11-15'))
+
+cursor.execute("""
+INSERT INTO medical_condition (med_report_id, condition_name, description, diagnosis_date)
+VALUES (%s, %s, %s, %s)
+""", (report_mapping[1], 'Ankle Instability', 'Chronic ankle instability contributing to repeated sprains', '2024-11-15'))
+
+# Player 3 (Martinez) - Hamstring strain
+cursor.execute("""
+INSERT INTO medical_condition (med_report_id, condition_name, description, diagnosis_date)
+VALUES (%s, %s, %s, %s)
+""", (report_mapping[3], 'Hamstring Strain', 'Grade 2 tear of the biceps femoris muscle', '2024-10-28'))
+
+# Player 5 (Fernandes) - Groin injury
+cursor.execute("""
+INSERT INTO medical_condition (med_report_id, condition_name, description, diagnosis_date)
+VALUES (%s, %s, %s, %s)
+""", (report_mapping[5], 'Adductor Strain', 'Strain of the adductor longus muscle', '2024-11-05'))
+
+
+
 mydb.commit()
 cursor.close()
