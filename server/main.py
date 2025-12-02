@@ -1060,6 +1060,33 @@ def set_player_as_healed(player_id: int):
     return {"status": "success", "message": "Player marked as healed"}
 
 
+# UPDATE endpoint to deactivate player
+@app.post("/player/deactivate/{player_id}", status_code=200)
+def set_player_as_inactive(player_id: int):
+    connection = get_db_connection()
+    connection.start_transaction()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE player SET is_active = FALSE WHERE player_id = %s
+        """, (player_id,))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Player not found")
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(err))
+    except Exception as e:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.commit()
+            connection.close()
+    return {"status": "success", "message": "Player marked as inactive"}
+
+
 # UPDATE endpoint for match result
 @app.put("/match/{match_id}/result", status_code=200)
 def update_match_result(match_id: int, result: str = Form(...)):
