@@ -130,7 +130,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
             <h3 className="text-sm font-medium text-muted-foreground">Active Season</h3>
             <Settings className="size-5 text-warning-foreground" />
           </div>
-          <p className="text-lg font-bold text-foreground">2025</p>
+          <p className="text-3xl font-bold text-foreground">2025</p>
         </Card>
       </div>
 
