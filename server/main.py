@@ -1207,13 +1207,17 @@ def delete_player(player_id: int):
     connection.start_transaction()
     cursor = connection.cursor()
     try:
+        # First, delete from match_lineup_slot to avoid foreign key constraint
+        cursor.execute("DELETE FROM match_lineup_slot WHERE player_id = %s", (player_id,))
+        
+        # Then delete the player (this will cascade to medical_report, player_match_stats, scouting_report)
         cursor.execute("DELETE FROM player WHERE player_id = %s", (player_id,))
         
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Player not found")
             
         connection.commit()
-        return {"status": "success", "message": "Player deleted"}
+        return {"status": "success", "message": "Player and all related records deleted"}
     except mysql.connector.Error as err:
         connection.rollback()
         raise HTTPException(status_code=500, detail=str(err))
