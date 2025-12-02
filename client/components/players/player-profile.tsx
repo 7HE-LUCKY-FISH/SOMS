@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface PlayerStats {
   pms_id: number
@@ -66,11 +77,15 @@ interface PlayerProfileProps {
 }
 
 export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
+  const router = useRouter()
   const [player, setPlayer] = useState<Player | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   const canAddNotes = userRole === 'coach' || userRole === 'medical' || userRole === 'admin'
+  const canDelete = userRole === 'admin'
 
   useEffect(() => {
     fetchPlayer()
@@ -92,6 +107,30 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
       setError('Failed to load player details')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleDeletePlayer() {
+    try {
+      setIsDeleting(true)
+      const response = await fetch(`http://localhost:8000/player/${playerId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete player')
+      }
+      
+      const data = await response.json()
+      
+      // Redirect to players list after successful deletion
+      router.push('/players')
+    } catch (err) {
+      console.error('[player-profile] Error deleting player:', err)
+      setError('Failed to delete player. Please try again.')
+      setShowDeleteDialog(false)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -146,9 +185,21 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
           <h1 className="text-3xl font-bold text-foreground">{fullName}</h1>
           <p className="text-muted-foreground">{player.positions || 'Position not set'}</p>
         </div>
-        {canAddNotes && (
-          <Button>Add Note</Button>
-        )}
+        <div className="flex gap-2">
+          {canAddNotes && (
+            <Button>Add Note</Button>
+          )}
+          {canDelete && (
+            <Button 
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+              style={{ color: 'lab(12.9629 -0.428468 -3.68954)' }}
+            >
+              <Trash2 className="size-4 mr-2" />
+              Delete Player
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
@@ -418,6 +469,34 @@ export function PlayerProfile({ playerId, userRole }: PlayerProfileProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Player</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {fullName}? This action cannot be undone and will permanently remove all player data including match statistics, medical reports, and photos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePlayer}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Player'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
