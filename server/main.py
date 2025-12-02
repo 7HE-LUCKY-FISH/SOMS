@@ -129,6 +129,42 @@ def get_total_users() -> Dict[str, int]:
             connection.close()
 
 
+@app.get("/total_staff")
+def get_total_staff() -> Dict[str, int]:
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("SELECT COUNT(*) FROM staff")
+        total_staff = cursor.fetchone()[0]
+        
+        return {"total_staff": total_staff}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/total_players")
+def get_total_players() -> Dict[str, int]:
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("SELECT COUNT(*) FROM player")
+        total_players = cursor.fetchone()[0]
+        
+        return {"total_players": total_players}
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
 @app.post("/staff/create", status_code=201)
 def create_staff_member(staff: StaffCreate):
     try:
