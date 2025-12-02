@@ -2,7 +2,6 @@ import mysql.connector
 import base64
 import logging
 import os
-import mimetypes
 from datetime import date, datetime, time as dtime
 import uvicorn
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
