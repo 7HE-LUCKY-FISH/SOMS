@@ -82,6 +82,23 @@ export function MatchesView({ userRole }: MatchesViewProps) {
     }
   }
 
+  const formatMatchTime = (isoDuration: string) => {
+  const timeMatch = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  if (!timeMatch) return 'Invalid time';
+  
+  const hours = parseInt(timeMatch[1] || '0');
+  const minutes = parseInt(timeMatch[2] || '0');
+  
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+};
+
   const upcomingMatches = matches.filter(m => !m.result)
   const completedMatches = matches.filter(m => m.result)
 
@@ -223,11 +240,7 @@ export function MatchesView({ userRole }: MatchesViewProps) {
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Time:</span>
                         <span className="text-foreground">
-                          {new Date(`1970-01-01T${match.match_time}`).toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit', 
-                            hour12: true 
-                          })}
+                          {formatMatchTime(match.match_time)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

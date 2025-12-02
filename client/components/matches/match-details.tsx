@@ -20,6 +20,23 @@ interface MatchDetailsProps {
   matchId: string
 }
 
+const formatMatchTime = (isoDuration: string) => {
+  const timeMatch = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  if (!timeMatch) return 'Invalid time';
+  
+  const hours = parseInt(timeMatch[1] || '0');
+  const minutes = parseInt(timeMatch[2] || '0');
+  
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+};
+
 export function MatchDetails({ matchId }: MatchDetailsProps) {
   const [match, setMatch] = useState<Match | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -110,11 +127,7 @@ export function MatchDetails({ matchId }: MatchDetailsProps) {
           <div>
             <p className="text-sm text-muted-foreground mb-1">Kickoff</p>
             <p className="font-medium text-foreground">
-              {new Date(`1970-01-01T${match.match_time}`).toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit', 
-                hour12: true 
-              })}
+              {formatMatchTime(match.match_time)}
             </p>
           </div>
           <div>
