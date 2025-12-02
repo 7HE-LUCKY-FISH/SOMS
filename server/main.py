@@ -91,6 +91,44 @@ def health_check() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/total_users")
+def get_total_users() -> Dict[str, int]:
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        # Get counts from each user table
+        cursor.execute("SELECT COUNT(*) FROM staff_account")
+        staff_accounts = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM coach")
+        coaches = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM scout")
+        scouts = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM med_staff")
+        medical_staff = cursor.fetchone()[0]
+        
+        total = staff_accounts + coaches + scouts + medical_staff
+        
+        return {
+            "total_users": total,
+            "breakdown": {
+                "staff_accounts": staff_accounts,
+                "coaches": coaches,
+                "scouts": scouts,
+                "medical_staff": medical_staff
+            }
+        }
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
 @app.post("/staff/create", status_code=201)
 def create_staff_member(staff: StaffCreate):
     try:
