@@ -1224,6 +1224,41 @@ VALUES (%s, %s, %s, %s)
 """, (report_mapping[5], 'Adductor Strain', 'Strain of the adductor longus muscle', '2024-11-05'))
 
 
+"""
+    DON"T ENDABLE THIS WITHOUT CHECKING YOUR PRIVILEGES -7LF
+
+ Note: This requires the connecting user to have CREATE ROLE and GRANT privileges
+ cursor.execute("CREATE ROLE IF NOT EXISTS 'coach_role';")
+ cursor.execute("CREATE ROLE IF NOT EXISTS 'medical_role';")
+ cursor.execute("CREATE ROLE IF NOT EXISTS 'scout_role';")
+ cursor.execute("CREATE ROLE IF NOT EXISTS 'admin_role';")
+
+ # Grant permissions for coach_role: can update matches, scores, scouting reports
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.match_table TO 'coach_role';")
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.player_match_stats TO 'coach_role';")
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.scouting_report TO 'coach_role';")
+ cursor.execute("GRANT SELECT ON SOMS.player TO 'coach_role';")
+ cursor.execute("GRANT SELECT ON SOMS.team TO 'coach_role';")
+ cursor.execute("GRANT SELECT ON SOMS.staff TO 'coach_role';")
+
+ # Grant permissions for medical_role: can update medical reports but not contracts
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.medical_report TO 'medical_role';")
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.medical_condition TO 'medical_role';")
+ cursor.execute("GRANT SELECT ON SOMS.player TO 'medical_role';")
+ cursor.execute("GRANT SELECT ON SOMS.staff TO 'medical_role';")
+
+ 
+
+ # Grant permissions for scout_role: can update scouting reports
+ cursor.execute("GRANT SELECT, UPDATE ON SOMS.scouting_report TO 'scout_role';")
+ cursor.execute("GRANT SELECT ON SOMS.player TO 'scout_role';")
+ cursor.execute("GRANT SELECT ON SOMS.staff TO 'scout_role';")
+
+ 
+ cursor.execute("GRANT ALL PRIVILEGES ON SOMS.* TO 'admin_role';")
+"""
+# To assign roles to users, you would need to create MySQL users and grant roles
+# For example, after creating a user: GRANT 'coach_role' TO 'username'@'host';
 
 mydb.commit()
 cursor.close()
