@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Search, AlertTriangle, Loader2 } from 'lucide-react'
 import { UserRole } from '@/lib/auth'
-import { apiGetAllMedicalReports, apiGetAllPlayers, apiCreateMedicalReport } from '@/lib/api'
+import { apiGetAllMedicalReports, apiGetAllPlayers, apiCreateMedicalReport, apiSetPlayerInjured, apiSetPlayerHealed } from '@/lib/api'
 
 interface MedicalCenterProps {
   userRole: UserRole
@@ -25,6 +25,8 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [updatingPlayerId, setUpdatingPlayerId] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState('injuries')
   
   const canEdit = userRole === 'medical' || userRole === 'admin'
 
@@ -71,6 +73,32 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
       setCreateError(err.message || 'Failed to create medical report')
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  async function handleMarkInjured(playerId: number) {
+    setUpdatingPlayerId(playerId)
+    try {
+      await apiSetPlayerInjured(playerId)
+      fetchData() // Refresh the data
+    } catch (err: any) {
+      console.error('Failed to mark player as injured:', err)
+      // You could add a toast notification here
+    } finally {
+      setUpdatingPlayerId(null)
+    }
+  }
+
+  async function handleMarkHealed(playerId: number) {
+    setUpdatingPlayerId(playerId)
+    try {
+      await apiSetPlayerHealed(playerId)
+      fetchData() // Refresh the data
+    } catch (err: any) {
+      console.error('Failed to mark player as recovered:', err)
+      // You could add a toast notification here
+    } finally {
+      setUpdatingPlayerId(null)
     }
   }
 
@@ -208,7 +236,7 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
         )}
       </div>
 
-      <Tabs defaultValue="injuries" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="injuries">Injury Log</TabsTrigger>
           <TabsTrigger value="availability">Availability Board</TabsTrigger>
@@ -281,6 +309,7 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Player</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Reason</th>
+                    {canEdit && <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -297,6 +326,37 @@ export function MedicalCenter({ userRole }: MedicalCenterProps) {
                       <td className="px-4 py-4">
                         <p className="text-sm text-muted-foreground">{item.reason || '-'}</p>
                       </td>
+                      {canEdit && (
+                        <td className="px-4 py-4">
+                          <div className="flex gap-2">
+                            {item.status === 'out' ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleMarkHealed(parseInt(item.playerId))}
+                                disabled={updatingPlayerId === parseInt(item.playerId)}
+                              >
+                                {updatingPlayerId === parseInt(item.playerId) ? (
+                                  <Loader2 className="size-3 animate-spin mr-1" />
+                                ) : null}
+                                Mark Available
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleMarkInjured(parseInt(item.playerId))}
+                                disabled={updatingPlayerId === parseInt(item.playerId)}
+                              >
+                                {updatingPlayerId === parseInt(item.playerId) ? (
+                                  <Loader2 className="size-3 animate-spin mr-1" />
+                                ) : null}
+                                Mark Injured
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

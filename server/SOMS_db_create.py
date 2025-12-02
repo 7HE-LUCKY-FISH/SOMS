@@ -108,11 +108,11 @@ create table if not exists player
     first_name VARCHAR(50) NOT NULL,
     middle_name VARCHAR(50),
     last_name VARCHAR(50) NOT NULL,
-    salary DECIMAL(10,2) NOT NULL,
+    salary DECIMAL(12,2) NOT NULL,
     positions VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
     is_injured BOOLEAN DEFAULT FALSE,
-    transfer_value DECIMAL(10,2),
+    transfer_value DECIMAL(12,2),
     contract_end_date DATE NOT NULL,
     scouted_player BOOLEAN DEFAULT FALSE,
     team_id INT NULL,
@@ -127,6 +127,13 @@ create table if not exists player
 );
 """)
 #scouted_player indicates if the player is being scouted and not on team
+
+# Alter existing table columns to support larger values if table already exists
+cursor.execute("""
+ALTER TABLE player 
+MODIFY COLUMN salary DECIMAL(12,2) NOT NULL,
+MODIFY COLUMN transfer_value DECIMAL(12,2)
+""")
 
 
 
@@ -367,6 +374,31 @@ cursor.execute("""
 # Insert sample players with images
 players_data = [
     ('Diogo', None, 'Dalot', 4000000.00, 'RB', 1, 0, 25000000.00, '2028-06-30', 0, 'player_images/Dalot.png'),
+    ('Antony', None, 'Matheus dos Santos', 35000000.00, 'RW', 1, 0, 60000000.00, '2027-06-30', 0, 'player_images/Antony.png'),
+    ('Lisandro', None, 'Martinez', 30000000.00, 'CB', 1, 0, 55000000.00, '2026-06-30', 0, 'player_images/Martinez.png'),
+    ('Casemiro', None, 'de Souza', 45000000.00, 'CDM', 1, 0, 70000000.00, '2025-06-30', 0, 'player_images/Casemiro.png'),
+    ('Bruno', None, 'Fernandes', 50000000.00, 'CAM', 1, 0, 80000000.00, '2026-06-30', 0, 'player_images/Fernandes.png'),
+    ('Marcus', None, 'Rashford', 55000000.00, 'ST', 1, 0, 90000000.00, '2027-06-30', 0, 'player_images/Rashford.png'),
+    ('Jadon', None, 'Sancho', 60000000.00, 'LW', 1, 0, 95000000.00, '2026-06-30', 0, 'player_images/Sancho.png'),
+    ('Cole', None, 'Palmer', 1500000.00, 'CM', 1, 0, 10000000.00, '2025-06-30', 0, 'player_images/Palmer.png'),
+    ('Harry', None, 'Maguire', 25000000.00, 'CB', 1, 0, 40000000.00, '2026-06-30', 0, 'player_images/Maguire.png'),
+    ('Raphael', None, 'Varane', 30000000.00, 'CB', 1, 0, 45000000.00, '2025-06-30', 0, 'player_images/Varane.png'),
+    ('Luke', None, 'Shaw', 20000000.00, 'LB', 1, 0, 35000000.00, '2026-06-30', 0, 'player_images/Shaw.png'),
+    ('Altay', None, 'Bayindir', 500000.00, 'GK', 1, 0, 5000000.00, '2025-06-30', 1, 'player_images/Bayindir.png'),
+    ('Christian', None, 'Eriksen', 10000000.00, 'CAM', 1, 0, 20000000.00, '2025-06-30', 1, 'player_images/Eriksen.png'),
+    ('Rasmus', None, 'Hojlund', 8000000.00, 'ST', 1, 0, 15000000.00, '2027-06-30', 1, 'player_images/Hojlund.png'),
+    ('Kevin', None, 'De Bruyne', 70000000.00, 'CM', 1, 0, 100000000.00, '2025-06-30', 0, 'player_images/DeBruyne.png'),
+    ('Erling', None, 'Haaland', 90000000.00, 'ST', 1, 0, 150000000.00, '2027-06-30', 0, 'player_images/Haaland.png'),
+    ('Virgil', None, 'van Dijk', 60000000.00, 'CB', 1, 0, 80000000.00, '2026-06-30', 0, 'player_images/Dijk.png'),
+    ('Lionel', None, 'Messi', 120000000.00, 'RW', 1, 0, 200000000.00, '2025-06-30', 0, 'player_images/Messi.png'), 
+    ('Christiano', None, 'Ronaldo', 100000000.00, 'ST', 1, 0, 180000000.00, '2025-06-30', 0, 'player_images/Ronaldo.png'),
+    ('Declan', None, 'Rice', 45000000.00, 'CDM', 1, 0, 75000000.00, '2026-06-30', 0, 'player_images/Rice.png'), 
+    ('Kaoru', None, 'Mitoma', 20000000.00, 'LW', 1, 0, 40000000.00, '2027-06-30', 0, 'player_images/Mitoma.png'),
+    ('Heung-Min', None, 'Son', 80000000.00, 'LW', 1, 0, 120000000.00, '2026-06-30', 0, 'player_images/Son.png'),
+    ('Kobbie', None, 'Mainoo', 1000000.00, 'CM', 1, 0, 8000000.00, '2025-06-30', 1, 'player_images/Mainoo.png'), 
+    ('Mason', None, 'Mount', 40000000.00, 'CAM', 1, 0, 70000000.00, '2026-06-30', 0, 'player_images/Mount.png'),
+    ('Jadon', None, 'Sancho', 60000000.00, 'RW', 1, 0, 95000000.00, '2026-06-30', 0, 'player_images/Sancho.png'),
+    ('Andre', None, 'Onana', 15000000.00, 'GK', 1, 0, 30000000.00, '2027-06-30', 0, 'player_images/Onana.png')
 ]
 
 for first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player, photo_filename in players_data:
@@ -388,6 +420,722 @@ for first_name, middle_name, last_name, salary, positions, is_active, is_injured
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
     """, (first_name, middle_name, last_name, salary, positions, is_active, is_injured, transfer_value, contract_end_date, scouted_player,
           photo_data, photo_content_type, photo_filename, photo_size))
+
+
+
+cursor.execute("""
+INSERT INTO team (name, level) VALUES ('Lions', 'Professional')
+  ON DUPLICATE KEY UPDATE team_id = LAST_INSERT_ID(team_id);
+""")
+cursor.execute("SET @team_lions_id = LAST_INSERT_ID();")
+
+cursor.execute("""
+INSERT INTO team (name, level) VALUES ('Tigers', 'Development')
+  ON DUPLICATE KEY UPDATE team_id = LAST_INSERT_ID(team_id);
+""")
+cursor.execute("SET @team_tigers_id = LAST_INSERT_ID();")
+
+
+# Could I have made this in a loop yes but I am tired
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Season Opener', 'Main Stadium', '15:00:00', 'Rivals FC', CURDATE(), '2-1')
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+cursor.execute("SET @match_id = LAST_INSERT_ID();")
+
+# Past matches (3)
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 1', 'Old Trafford', '17:30:00', 'Liverpool FC', DATE_SUB(CURDATE(), INTERVAL 30 DAY), '1-3')
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 2', 'Etihad Stadium', '16:00:00', 'Manchester City', DATE_SUB(CURDATE(), INTERVAL 23 DAY), '0-2')
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('FA Cup Round 3', 'Wembley Stadium', '15:00:00', 'Chelsea FC', DATE_SUB(CURDATE(), INTERVAL 16 DAY), '2-1')
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+# Future matches (7)
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 15', 'Anfield', '20:00:00', 'Liverpool FC', DATE_ADD(CURDATE(), INTERVAL 7 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 16', 'Stamford Bridge', '17:30:00', 'Chelsea FC', DATE_ADD(CURDATE(), INTERVAL 14 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 17', 'Camp Nou', '21:00:00', 'FC Barcelona', DATE_ADD(CURDATE(), INTERVAL 21 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 18', 'Santiago Bernabeu', '19:00:00', 'Real Madrid', DATE_ADD(CURDATE(), INTERVAL 28 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 19', 'Allianz Arena', '18:30:00', 'Bayern Munich', DATE_ADD(CURDATE(), INTERVAL 35 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 20', 'Parc des Princes', '21:00:00', 'Paris Saint-Germain', DATE_ADD(CURDATE(), INTERVAL 42 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Champions League Quarter Final', 'San Siro', '20:45:00', 'AC Milan', DATE_ADD(CURDATE(), INTERVAL 49 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+cursor.execute("""
+INSERT INTO match_table (name, venue, match_time, opponent_team, match_date, result)
+VALUES ('Premier League Round 21', 'Signal Iduna Park', '15:30:00', 'Borussia Dortmund', DATE_ADD(CURDATE(), INTERVAL 56 DAY), NULL)
+  ON DUPLICATE KEY UPDATE match_id = LAST_INSERT_ID(match_id);
+""")
+
+#LOL
+player_match_stats_data = [
+    # Match 2 - Premier League Round 1 vs Liverpool FC
+    (1, 2, 1, True, 45, 2, 1, 0, 0, 0, 1, 3, 0, 0, 85.2),  # Dalot
+    (2, 2, 1, True, 90, 1, 3, 1, 0, 0, 2, 5, 1, 0, 78.5),  # Antony
+    (3, 2, 1, True, 90, 3, 0, 0, 0, 0, 0, 1, 0, 0, 92.1),  # Martinez
+    (4, 2, 1, True, 90, 6, 1, 0, 0, 0, 3, 2, 0, 0, 88.7),  # Casemiro
+    (5, 2, 1, True, 90, 2, 2, 0, 0, 0, 1, 4, 1, 1, 82.3),  # Fernandes
+    (6, 2, 1, True, 90, 0, 4, 2, 0, 0, 0, 2, 0, 1, 75.8),  # Rashford
+    (7, 2, 1, False, 67, 1, 2, 1, 0, 0, 1, 3, 0, 0, 79.4), # Sancho
+    (8, 2, 1, False, 23, 0, 0, 0, 0, 0, 0, 1, 0, 0, 90.0), # Palmer
+    (9, 2, 1, True, 90, 4, 0, 0, 0, 0, 1, 0, 0, 0, 94.5),  # Maguire
+    (10, 2, 1, True, 90, 2, 0, 0, 0, 0, 0, 0, 0, 0, 91.8), # Varane
+    (11, 2, 1, True, 90, 1, 1, 0, 0, 0, 2, 2, 0, 0, 86.9), # Shaw
+    (12, 2, 1, False, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0),   # Bayindir (didn't play)
+    (13, 2, 1, False, 45, 1, 1, 0, 0, 0, 0, 2, 0, 0, 83.2), # Eriksen
+    (14, 2, 1, False, 68, 0, 2, 1, 0, 0, 0, 1, 0, 0, 77.1), # Hojlund
+    (15, 2, 1, True, 90, 3, 3, 0, 0, 0, 1, 6, 2, 0, 84.7), # De Bruyne
+    (16, 2, 1, True, 90, 1, 5, 3, 0, 0, 0, 3, 0, 2, 72.4), # Haaland
+    (17, 2, 1, True, 90, 5, 0, 0, 0, 0, 2, 0, 0, 0, 95.3), # Van Dijk
+    (18, 2, 1, True, 90, 0, 4, 2, 0, 0, 0, 4, 1, 1, 76.8), # Messi
+    (19, 2, 1, True, 90, 1, 6, 4, 0, 0, 1, 2, 0, 3, 69.2), # Ronaldo
+    (20, 2, 1, True, 90, 4, 1, 0, 0, 0, 2, 1, 0, 0, 89.6), # Rice
+    (21, 2, 1, False, 22, 0, 1, 0, 0, 0, 0, 2, 0, 0, 81.5), # Mitoma
+    (22, 2, 1, True, 90, 1, 3, 1, 0, 0, 1, 5, 1, 1, 78.9), # Son
+    (23, 2, 1, False, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0),   # Mainoo (didn't play)
+    (24, 2, 1, True, 90, 2, 2, 0, 0, 0, 0, 3, 1, 0, 85.1), # Mount
+    (25, 2, 1, False, 45, 1, 1, 0, 0, 0, 1, 2, 0, 0, 80.3), # Sancho (duplicate, made different)
+    (26, 2, 1, True, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100.0), # Onana
+
+    # Match 3 - Premier League Round 2 vs Manchester City
+    (1, 3, 1, True, 90, 3, 0, 0, 0, 0, 2, 1, 0, 0, 87.4),  # Dalot
+    (2, 3, 1, True, 90, 2, 2, 1, 0, 0, 3, 4, 0, 0, 76.9),  # Antony
+    (3, 3, 1, True, 90, 4, 0, 0, 0, 0, 1, 0, 0, 0, 93.2),  # Martinez
+    (4, 3, 1, True, 90, 5, 0, 0, 0, 0, 4, 1, 0, 0, 90.1),  # Casemiro
+    (5, 3, 1, True, 90, 1, 3, 0, 0, 0, 0, 5, 2, 0, 83.7),  # Fernandes
+    (6, 3, 1, True, 90, 0, 3, 2, 0, 0, 1, 1, 0, 0, 74.6),  # Rashford
+    (7, 3, 1, False, 78, 2, 1, 0, 0, 0, 2, 3, 0, 0, 81.8), # Sancho
+    (8, 3, 1, True, 90, 3, 1, 0, 0, 0, 1, 2, 0, 0, 88.9), # Palmer
+    (9, 3, 1, True, 90, 2, 0, 0, 0, 0, 0, 0, 0, 0, 95.7),  # Maguire
+    (10, 3, 1, False, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85.0), # Varane
+    (11, 3, 1, True, 90, 1, 0, 0, 0, 0, 1, 1, 0, 0, 89.3), # Shaw
+    (12, 3, 1, True, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100.0), # Bayindir
+    (13, 3, 1, False, 34, 1, 0, 0, 0, 0, 0, 1, 0, 0, 86.4), # Eriksen
+    (14, 3, 1, True, 90, 0, 2, 1, 0, 0, 0, 0, 0, 1, 79.2), # Hojlund
+    (15, 3, 1, True, 90, 4, 2, 0, 0, 0, 2, 4, 1, 0, 85.6), # De Bruyne
+    (16, 3, 1, True, 90, 0, 4, 3, 0, 0, 0, 2, 0, 2, 71.9), # Haaland
+    (17, 3, 1, True, 90, 3, 0, 0, 0, 0, 1, 0, 0, 0, 96.1), # Van Dijk
+    (18, 3, 1, True, 90, 1, 3, 1, 0, 0, 0, 3, 1, 0, 80.5), # Messi
+    (19, 3, 1, True, 90, 2, 5, 3, 0, 0, 2, 1, 0, 2, 73.8), # Ronaldo
+    (20, 3, 1, True, 90, 6, 0, 0, 0, 0, 3, 0, 0, 0, 91.4), # Rice
+    (21, 3, 1, False, 56, 1, 1, 0, 0, 0, 1, 2, 0, 0, 82.7), # Mitoma
+    (22, 3, 1, True, 90, 1, 4, 2, 0, 0, 0, 4, 1, 1, 77.3), # Son
+    (23, 3, 1, False, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0),   # Mainoo
+    (24, 3, 1, True, 90, 1, 1, 0, 0, 0, 0, 2, 0, 0, 87.9), # Mount
+    (25, 3, 1, False, 67, 0, 1, 0, 0, 0, 0, 1, 0, 0, 83.6), # Sancho
+    (26, 3, 1, True, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100.0), # Onana
+
+    # Match 4 - FA Cup Round 3 vs Chelsea FC
+    (1, 4, 1, True, 90, 2, 1, 0, 0, 0, 1, 2, 0, 0, 88.5),  # Dalot
+    (2, 4, 1, True, 90, 1, 4, 2, 0, 0, 2, 6, 1, 1, 75.2),  # Antony
+    (3, 4, 1, True, 90, 3, 0, 0, 0, 0, 0, 0, 0, 0, 94.8),  # Martinez
+    (4, 4, 1, True, 90, 7, 0, 0, 0, 0, 4, 1, 0, 0, 89.3),  # Casemiro
+    (5, 4, 1, True, 90, 2, 2, 0, 0, 0, 1, 4, 1, 0, 84.1),  # Fernandes
+    (6, 4, 1, True, 90, 0, 5, 3, 0, 0, 0, 3, 0, 2, 70.9),  # Rashford
+    (7, 4, 1, False, 89, 1, 2, 1, 0, 0, 1, 4, 0, 0, 78.7), # Sancho
+    (8, 4, 1, True, 90, 4, 0, 0, 0, 0, 2, 1, 0, 0, 90.6), # Palmer
+    (9, 4, 1, True, 90, 1, 0, 0, 0, 0, 0, 0, 0, 0, 96.2),  # Maguire
+    (10, 4, 1, True, 90, 4, 0, 0, 0, 0, 1, 0, 0, 0, 92.7), # Varane
+    (11, 4, 1, True, 90, 2, 1, 0, 0, 0, 3, 3, 0, 0, 85.4), # Shaw
+    (12, 4, 1, False, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0),   # Bayindir
+    (13, 4, 1, False, 78, 2, 1, 0, 0, 0, 0, 3, 1, 0, 81.9), # Eriksen
+    (14, 4, 1, True, 90, 0, 3, 2, 0, 0, 0, 1, 0, 1, 76.5), # Hojlund
+    (15, 4, 1, True, 90, 3, 3, 0, 0, 0, 1, 5, 2, 0, 86.8), # De Bruyne
+    (16, 4, 1, True, 90, 1, 6, 4, 0, 0, 1, 4, 0, 3, 68.7), # Haaland
+    (17, 4, 1, True, 90, 6, 0, 0, 0, 0, 2, 0, 0, 0, 93.9), # Van Dijk
+    (18, 4, 1, True, 90, 0, 5, 3, 0, 0, 0, 5, 1, 2, 74.1), # Messi
+    (19, 4, 1, True, 90, 1, 7, 5, 0, 0, 1, 2, 0, 4, 65.3), # Ronaldo
+    (20, 4, 1, True, 90, 5, 1, 0, 0, 0, 3, 1, 0, 0, 91.2), # Rice
+    (21, 4, 1, False, 45, 0, 2, 1, 0, 0, 0, 3, 0, 0, 79.8), # Mitoma
+    (22, 4, 1, True, 90, 1, 4, 2, 0, 0, 1, 6, 1, 1, 77.6), # Son
+    (23, 4, 1, False, 23, 0, 0, 0, 0, 0, 0, 1, 0, 0, 88.0), # Mainoo
+    (24, 4, 1, True, 90, 3, 2, 0, 0, 0, 0, 4, 1, 0, 84.9), # Mount
+    (25, 4, 1, False, 56, 1, 1, 0, 0, 0, 1, 2, 0, 0, 82.1), # Sancho
+    (26, 4, 1, True, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100.0), # Onana
+]
+
+for player_id, match_id, team_id, started, minutes, tackles, shots_total, offsides, red_cards, yellow_cards, fouls_committed, dribbles_attempted, assists, goals, passing_accuracy in player_match_stats_data:
+    cursor.execute("""
+        INSERT INTO player_match_stats (player_id, match_id, team_id, started, minutes, tackles, shots_total, offsides, red_cards, yellow_cards, fouls_committed, dribbles_attempted, assists, goals, passing_accuracy)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (player_id, match_id, team_id, started, minutes, tackles, shots_total, offsides, red_cards, yellow_cards, fouls_committed, dribbles_attempted, assists, goals, passing_accuracy))
+
+# Insert sample staff members
+# Manchester United Staff
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Erik', None, 'ten Hag', 'erik.tenhag@manutd.com', 9000000.00, 54, '2022-06-01', 'Coach'))
+coach_ten_hag_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('David', None, 'Harrison', 'david.harrison@manutd.com', 500000.00, 45, '2021-07-01', 'Scout'))
+scout_harrison_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Richard', None, 'Hartis', 'richard.hartis@manutd.com', 600000.00, 56, '2019-07-01', 'Med'))
+med_hartis_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Tom', None, 'Admin', 'tom.admin@manutd.com', 400000.00, 30, '2024-02-01', 'Admin'))
+admin_tom_id = cursor.lastrowid
+
+# Liverpool Staff
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Jurgen', None, 'Klopp', 'jurgen.klopp@liverpool.com', 8000000.00, 57, '2015-10-08', 'Coach'))
+coach_klopp_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Michael', None, 'Edwards', 'michael.edwards@liverpool.com', 450000.00, 42, '2016-10-01', 'Scout'))
+scout_edwards_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Zaf', 'Iqbal', 'zaf.iqbal@liverpool.com', 550000.00, 48, '2018-07-01', 'Med'))
+med_iqbal_id = cursor.lastrowid
+
+# Manchester City Staff
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Pep', None, 'Guardiola', 'pep.guardiola@mancity.com', 20000000.00, 53, '2016-07-01', 'Coach'))
+coach_guardiola_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Txiki', None, 'Begiristain', 'txiki.begiristain@mancity.com', 3000000.00, 59, '2012-07-01', 'Scout'))
+scout_begiristain_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Eva', 'Carrillo', 'eva.carrillo@mancity.com', 650000.00, 52, '2017-07-01', 'Med'))
+med_carrillo_id = cursor.lastrowid
+
+# Chelsea Staff
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Mauricio', None, 'Pochettino', 'mauricio.pochettino@chelsea.com', 15000000.00, 52, '2023-07-01', 'Coach'))
+coach_pochettino_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Scott', None, 'McLachlan', 'scott.mclachlan@chelsea.com', 400000.00, 38, '2020-07-01', 'Scout'))
+scout_mclachlan_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Eva', 'Silvestre', 'eva.silvestre@chelsea.com', 580000.00, 49, '2021-07-01', 'Med'))
+med_silvestre_id = cursor.lastrowid
+
+# Real Madrid Staff (La Liga)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Carlo', None, 'Ancelotti', 'carlo.ancelotti@realmadrid.com', 12000000.00, 65, '2021-06-01', 'Coach'))
+coach_ancelotti_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Juni', None, 'Calafat', 'juni.calafat@realmadrid.com', 800000.00, 55, '2013-07-01', 'Scout'))
+scout_calafat_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Jesus', 'Olmo', 'jesus.olmo@realmadrid.com', 700000.00, 58, '2018-07-01', 'Med'))
+med_olmo_id = cursor.lastrowid
+
+# FC Barcelona Staff (La Liga)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Xavi', None, 'Hernandez', 'xavi.hernandez@barcelona.com', 6000000.00, 44, '2021-11-06', 'Coach'))
+coach_xavi_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Ramon', None, 'Planes', 'ramon.planes@barcelona.com', 350000.00, 41, '2018-07-01', 'Scout'))
+scout_planes_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Ricard', 'Pruna', 'ricard.pruna@barcelona.com', 620000.00, 54, '2019-07-01', 'Med'))
+med_pruna_id = cursor.lastrowid
+
+# AC Milan Staff (Serie A)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Stefano', None, 'Pioli', 'stefano.pioli@acmilan.com', 4000000.00, 58, '2019-10-09', 'Coach'))
+coach_pioli_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Paolo', None, 'Maldini', 'paolo.maldini@acmilan.com', 1200000.00, 56, '2018-07-01', 'Scout'))
+scout_maldini_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Stefano', 'Mazzoni', 'stefano.mazzoni@acmilan.com', 550000.00, 47, '2020-07-01', 'Med'))
+med_mazzoni_id = cursor.lastrowid
+
+# Bayern Munich Staff (Bundesliga)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Thomas', None, 'Tuchel', 'thomas.tuchel@bayernmunich.com', 8000000.00, 51, '2024-03-01', 'Coach'))
+coach_tuchel_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Michael', None, 'Reschke', 'michael.reschke@bayernmunich.com', 600000.00, 50, '2017-07-01', 'Scout'))
+scout_reschke_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Hans-Wilhelm', 'Muller-Wohlfahrt', 'hans.muller@bayernmunich.com', 750000.00, 74, '1977-07-01', 'Med'))
+med_muller_id = cursor.lastrowid
+
+# Paris Saint-Germain Staff (Ligue 1)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Luis', None, 'Enrique', 'luis.enrique@psg.com', 10000000.00, 54, '2023-07-01', 'Coach'))
+coach_enrique_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Antero', None, 'Henrique', 'antero.henrique@psg.com', 900000.00, 54, '2017-06-01', 'Scout'))
+scout_henrique_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Nicolas', 'Bauer', 'nicolas.bauer@psg.com', 580000.00, 46, '2022-07-01', 'Med'))
+med_bauer_id = cursor.lastrowid
+
+# Borussia Dortmund Staff (Bundesliga)
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Edin', None, 'Terzic', 'edin.terzic@borussiadortmund.com', 2000000.00, 41, '2022-05-01', 'Coach'))
+coach_terzic_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Sven', None, 'Mislintat', 'sven.mislintat@borussiadortmund.com', 700000.00, 51, '2018-07-01', 'Scout'))
+scout_mislintat_id = cursor.lastrowid
+
+cursor.execute("""
+INSERT INTO staff (first_name, middle_name, last_name, email, salary, age, date_hired, staff_type)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE staff_id = LAST_INSERT_ID(staff_id)
+""", ('Dr.', 'Markus', 'Braun', 'markus.braun@borussiadortmund.com', 520000.00, 43, '2021-07-01', 'Med'))
+med_braun_id = cursor.lastrowid
+
+# Staff accounts for admin staff
+cursor.execute("""
+INSERT INTO staff_account (staff_id, username, password_hash, is_active, last_login)
+VALUES (%s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE username = VALUES(username), password_hash = VALUES(password_hash), is_active = VALUES(is_active)
+""", (admin_tom_id, 'tom.admin', 'sha256_testhash_placeholder', 1, None))
+
+# Coach assignments
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_ten_hag_id, 'Manager', 1))
+
+# Assign remaining coaches to teams
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_klopp_id, 'Manager', 2))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_guardiola_id, 'Manager', 3))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_pochettino_id, 'Manager', 2))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_ancelotti_id, 'Manager', 3))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_xavi_id, 'Manager', 1))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_pioli_id, 'Manager', 2))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_tuchel_id, 'Manager', 3))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_enrique_id, 'Manager', 1))
+
+cursor.execute("""
+INSERT INTO coach (staff_id, role, team_id) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE role = VALUES(role), team_id = VALUES(team_id)
+""", (coach_terzic_id, 'Manager', 2))
+
+# Scout assignments
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_harrison_id, 'Europe', 15))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_edwards_id, 'UK', 12))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_begiristain_id, 'Global', 25))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_mclachlan_id, 'UK', 10))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_calafat_id, 'Spain', 20))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_planes_id, 'Spain', 8))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_maldini_id, 'Italy', 18))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_reschke_id, 'Germany', 16))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_henrique_id, 'Portugal', 14))
+
+cursor.execute("""
+INSERT INTO scout (staff_id, region, YOE) VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE region = VALUES(region), YOE = VALUES(YOE)
+""", (scout_mislintat_id, 'Germany', 13))
+
+# Med Staff assignments
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_hartis_id, 'Head of Medical', 'UEFA Certified', 25))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_iqbal_id, 'Sports Medicine', 'FIFA Certified', 18))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_carrillo_id, 'Physiotherapy', 'UEFA Certified', 22))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_silvestre_id, 'Sports Science', 'FIFA Certified', 15))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_olmo_id, 'Head of Medical', 'UEFA Certified', 28))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_pruna_id, 'Sports Medicine', 'FIFA Certified', 20))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_mazzoni_id, 'Physiotherapy', 'UEFA Certified', 12))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_muller_id, 'Head of Medical', 'FIFA Certified', 45))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_bauer_id, 'Sports Science', 'UEFA Certified', 11))
+
+cursor.execute("""
+INSERT INTO med_staff (staff_id, med_specialization, certification, YOE)
+VALUES (%s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE med_specialization = VALUES(med_specialization), certification = VALUES(certification), YOE = VALUES(YOE)
+""", (med_braun_id, 'Physiotherapy', 'FIFA Certified', 9))
+
+
+# Insert sample scouting reports
+# Manchester United scout (David Harrison) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_harrison_id, 'Kylian Mbappe', 18, '2024-11-15', 
+'Exceptional winger with blistering pace and clinical finishing. Age 25, at peak performance. Transfer value estimated at €180M. Would be perfect addition to our attacking lineup. Strong work rate and leadership qualities.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_harrison_id, 'Jude Bellingham', 20, '2024-10-20', 
+'Outstanding central midfielder with excellent vision and passing range. Age 21, huge potential for growth. Transfer value around €150M. Box-to-box midfielder with strong defensive capabilities. Would strengthen our midfield significantly.'))
+
+# Liverpool scout (Michael Edwards) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_edwards_id, 'Phil Foden', 15, '2024-09-10', 
+'Creative midfielder with exceptional dribbling skills and vision. Age 24, already at world-class level. Transfer value estimated at €120M. Perfect for our possession-based style of play. Excellent set-piece specialist.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_edwards_id, 'Trent Alexander-Arnold', 11, '2024-08-05', 
+'World-class right-back with exceptional crossing ability. Age 25, peak years ahead. Transfer value around €80M. Would provide width and creativity from full-back position. Strong defensively as well.'))
+
+# Manchester City scout (Txiki Begiristain) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_begiristain_id, 'Vinicius Jr', 2, '2024-12-01', 
+'Dynamic winger with incredible dribbling and pace. Age 24, explosive talent. Transfer value estimated at €150M. Would add flair and unpredictability to our attacking options. Still developing consistency.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_begiristain_id, 'Rodri', 4, '2024-11-25', 
+'Complete defensive midfielder with outstanding passing range. Age 28, in prime. Transfer value around €100M. Would provide stability and control in midfield. Excellent leadership qualities.'))
+
+# Chelsea scout (Scott McLachlan) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_mclachlan_id, 'Mohamed Salah', 6, '2024-10-30', 
+'Clinical finisher with exceptional pace and dribbling. Age 32, still world-class. Transfer value estimated at €50M. Would provide immediate goal threat. Experience and leadership invaluable.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_mclachlan_id, 'Alisson Becker', 26, '2024-09-15', 
+'World-class goalkeeper with excellent shot-stopping and distribution. Age 31, prime goalkeeper. Transfer value around €60M. Would provide stability in goal. Strong command of area.'))
+
+# Real Madrid scout (Juni Calafat) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_calafat_id, 'Pedri', 8, '2024-11-20', 
+'Exceptional young midfielder with incredible vision and technique. Age 21, huge potential. Transfer value estimated at €120M. Would be long-term solution for central midfield. Already showing world-class qualities.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_calafat_id, 'Ronald Araujo', 3, '2024-10-10', 
+'Modern center-back with excellent pace and technical ability. Age 25, peak years ahead. Transfer value around €90M. Would strengthen our defensive options significantly.'))
+
+# Barcelona scout (Ramon Planes) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_planes_id, 'Federico Valverde', 5, '2024-09-25', 
+'Box-to-box midfielder with exceptional work rate and passing. Age 26, in prime. Transfer value estimated at €100M. Would add dynamism and energy to our midfield. Strong defensively.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_planes_id, 'Martin Odegaard', 10, '2024-08-20', 
+'Creative midfielder with excellent vision and technical ability. Age 25, peak performance. Transfer value around €80M. Would provide creativity and control in attacking midfield.'))
+
+# AC Milan scout (Paolo Maldini) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_maldini_id, 'Harry Kane', 19, '2024-11-05', 
+'Clinical striker with exceptional finishing and movement. Age 31, still elite level. Transfer value estimated at €100M. Would provide guaranteed goals. Leadership and experience invaluable.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_maldini_id, 'Joshua Kimmich', 9, '2024-10-15', 
+'Complete full-back with outstanding crossing and defensive ability. Age 29, prime years. Transfer value around €70M. Would provide width and defensive solidity.'))
+
+# Bayern Munich scout (Michael Reschke) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_reschke_id, 'Jamal Musiala', 7, '2024-12-01', 
+'Exceptional young talent with incredible dribbling and vision. Age 21, huge potential. Transfer value estimated at €130M. Would be perfect for our attacking style. Already showing world-class qualities.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_reschke_id, 'Florian Wirtz', 14, '2024-11-10', 
+'Creative midfielder with outstanding technical ability. Age 21, recovering from injury. Transfer value around €100M. Huge potential once fully fit. Would add creativity to our midfield.'))
+
+# PSG scout (Antero Henrique) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_henrique_id, 'Bukayo Saka', 21, '2024-10-25', 
+'Dynamic winger with exceptional dribbling and crossing. Age 22, developing into world-class. Transfer value estimated at €120M. Would provide width and creativity from left flank.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_henrique_id, 'William Saliba', 17, '2024-09-30', 
+'Modern center-back with excellent reading of game and composure. Age 23, prime ahead. Transfer value around €80M. Would strengthen our defensive options significantly.'))
+
+# Borussia Dortmund scout (Sven Mislintat) scouting reports
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_mislintat_id, 'Enzo Fernandez', 24, '2024-11-15', 
+'Creative midfielder with excellent passing range and vision. Age 23, developing well. Transfer value estimated at €90M. Would add control and creativity to our midfield.'))
+
+cursor.execute("""
+INSERT INTO scouting_report (scout_id, target_player_name, target_player_id, report_date, report_desc)
+VALUES (%s, %s, %s, %s, %s)
+""", (scout_mislintat_id, 'Raphinha', 22, '2024-10-20', 
+'Skilled winger with excellent dribbling and finishing. Age 28, experienced. Transfer value around €60M. Would provide attacking threat from wide positions.'))
+
 
 mydb.commit()
 cursor.close()
