@@ -96,30 +96,13 @@ def get_total_users() -> Dict[str, int]:
     connection = get_db_connection()
     cursor = connection.cursor()
     try:
-        # Get counts from each user table
-        cursor.execute("SELECT COUNT(*) FROM staff_account")
-        staff_accounts = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM coach")
-        coaches = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM scout")
-        scouts = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM med_staff")
-        medical_staff = cursor.fetchone()[0]
-        
-        total = staff_accounts + coaches + scouts + medical_staff
-        
-        return {
-            "total_users": total,
-            "breakdown": {
-                "staff_accounts": staff_accounts,
-                "coaches": coaches,
-                "scouts": scouts,
-                "medical_staff": medical_staff
-            }
-        }
+        cursor.execute("SELECT COUNT(*) FROM staff")
+        total_staff = cursor.fetchone()[0]
+
+        cursor.execute("select count(*) from scout")
+        total_scouts = cursor.fetchone()[0]
+
+        return {"total_count": total_staff + total_scouts}
     except mysql.connector.Error as err:
         raise HTTPException(status_code=500, detail=str(err))
     finally:
